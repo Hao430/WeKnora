@@ -1,5 +1,5 @@
 /**
- * WeKnora embed widget SDK — floating chat launcher.
+ * 建工·知库 embed widget SDK — floating chat launcher.
  *
  * Programmatic:
  *   WeKnora.init({ channel, token, position, primaryColor, title, baseUrl })
@@ -57,7 +57,7 @@
     var handlers = listeners[event];
     if (!handlers) return;
     handlers.slice().forEach(function (fn) {
-      try { fn(payload); } catch (e) { console.error('[WeKnora]', e); }
+      try { fn(payload); } catch (e) { console.error('[建工·知库]', e); }
     });
   }
 
@@ -71,7 +71,7 @@
     // fetches a fresh token here and refreshes it before expiry.
     var tokenEndpoint = opts.tokenEndpoint || opts.token_endpoint || '';
     if (!channelId || (!staticToken && !tokenEndpoint)) {
-      console.warn('[WeKnora] channel and (token or tokenEndpoint) are required');
+      console.warn('[建工·知库] channel and (token or tokenEndpoint) are required');
       return null;
     }
 
@@ -118,7 +118,7 @@
           return tok;
         })
         .catch(function (e) {
-          console.error('[WeKnora] failed to load token', e);
+          console.error('[建工·知库] failed to load token', e);
           throw e;
         })
         .then(function (tok) { tokenInFlight = null; return tok; }, function (e) { tokenInFlight = null; throw e; });
@@ -242,7 +242,7 @@
 
     function postHostPayload(type, payload) {
       if (!iframe.contentWindow) {
-        console.warn('[WeKnora] iframe not ready');
+        console.warn('[建工·知库] iframe not ready');
         return false;
       }
       postToIframe({ source: HOST_SOURCE, type: type, payload: payload || {} });
@@ -256,7 +256,7 @@
         return;
       }
       if (tries >= 20) {
-        console.warn('[WeKnora] iframe not ready');
+        console.warn('[建工·知库] iframe not ready');
         return;
       }
       setTimeout(function () { whenIframeReady(fn, tries + 1); }, 100);
@@ -264,7 +264,7 @@
 
     function setContext(ctx) {
       if (!ctx || typeof ctx !== 'object') {
-        console.warn('[WeKnora] setContext expects an object');
+        console.warn('[建工·知库] setContext expects an object');
         return;
       }
       postHostPayload('set_context', ctx);
@@ -273,7 +273,7 @@
     function openWithQuery(query) {
       var text = String(query || '').trim();
       if (!text) {
-        console.warn('[WeKnora] openWithQuery requires a non-empty query');
+        console.warn('[建工·知库] openWithQuery requires a non-empty query');
         return;
       }
       setOpen(true);
@@ -285,7 +285,7 @@
     function setLocale(locale) {
       var loc = String(locale || '').trim();
       if (!loc) {
-        console.warn('[WeKnora] setLocale requires a locale string');
+        console.warn('[建工·知库] setLocale requires a locale string');
         return;
       }
       postHostPayload('set_locale', { locale: loc });

@@ -266,34 +266,8 @@ function formatUptime(totalSeconds: number): string {
 
 const troubleshootingDocsURL = docsUrl('troubleshootingMigrations')
 
-// Pre-fills a new issue with the current migration error so users don't have to
-// paste it manually. Body is intentionally minimal — the bug template will fill
-// in the rest. Encode aggressively to survive newlines / quotes.
-const reportIssueURL = computed(() => {
-  const base = 'https://github.com/Tencent/WeKnora/issues/new'
-  const params = new URLSearchParams({
-    template: 'bug_report.yml',
-    title: '[Bug]: Database migration failed at startup',
-    labels: 'bug',
-  })
-  const errMsg = systemInfo.value?.db_migration_error
-  if (errMsg) {
-    const body = [
-      '### Environment',
-      `- WeKnora version: ${systemInfo.value?.version || 'unknown'}`,
-      `- Commit: ${systemInfo.value?.commit_id || 'unknown'}`,
-      `- Frontend version: ${frontendVersion} (${frontendCommit})`,
-      `- DB version reported: ${systemInfo.value?.db_version || 'unknown'}`,
-      '',
-      '### Migration error',
-      '```',
-      errMsg,
-      '```',
-    ].join('\n')
-    params.set('body', body)
-  }
-  return `${base}?${params.toString()}`
-})
+// 问题反馈：公司智能表单（原 GitHub issue 预填逻辑已移除）
+const reportIssueURL = 'https://doc.weixin.qq.com/smartsheet/form/1_wpqK5IDAAA7B-eHPTGIu6xYlH596mmCg_f6aab7'
 
 // Methods
 const loadInfo = async () => {
