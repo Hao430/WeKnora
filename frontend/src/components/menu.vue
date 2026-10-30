@@ -3,7 +3,8 @@
         <!-- 展开时：Logo + 搜索/折叠按钮同行 -->
         <div class="logo_row" v-if="!uiStore.sidebarCollapsed">
             <div class="logo_box" @click="router.push('/platform/knowledge-bases')" style="cursor: pointer;">
-                <img class="logo" src="@/assets/img/weknora.png" alt="">
+                <img class="logo" src="@/assets/img/brand-icon.png" alt="建工监理">
+                <BrandWordmark class="brand-name" />
                 <sup v-if="isLiteEdition" class="lite-badge">Lite</sup>
             </div>
             <div class="logo_actions">
@@ -229,6 +230,7 @@ import { getSessionsList, batchDelSessions, deleteAllSessions, getSession } from
 import { useChatResourcesStore } from '@/stores/chatResources';
 import { listAllIMChannels } from '@/api/agent/index';
 import SessionSidebarRow from './SessionSidebarRow.vue';
+import BrandWordmark from './BrandWordmark.vue';
 import PanelResizeHandle from './PanelResizeHandle.vue';
 import { SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH } from '@/utils/sidebarWidth';
 import {
@@ -1381,13 +1383,21 @@ const resizeSidebar = (delta: number, keyboard: boolean) => {
     .logo_box {
         display: flex;
         align-items: center;
+        gap: 6px;
         flex: 1;
         min-width: 0;
         overflow: hidden;
 
         .logo {
-            width: 108px;
-            height: auto;
+            width: 26px;
+            height: 26px;
+            flex: none;
+        }
+
+        .brand-name {
+            font-size: 15px;
+            color: var(--td-text-color-primary);
+            margin-right: 2px;
         }
 
         .lite-badge {
@@ -2002,10 +2012,7 @@ const resizeSidebar = (delta: number, keyboard: boolean) => {
 }
 </style>
 <style lang="less">
-// Dark mode: invert dark logo to light
-html[theme-mode="dark"] .aside_box .logo_box .logo {
-    filter: invert(1) hue-rotate(180deg);
-}
+// 品牌图标自带红/棕配色，深色模式下不做反色处理；字标用 currentColor 自适应
 
 // Dark mode: 滚动条在深色背景下需要更亮的颜色才看得见
 html[theme-mode="dark"] .aside_box .menu_top:hover {

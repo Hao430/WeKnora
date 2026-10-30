@@ -96,13 +96,13 @@
     </div>
 
     <!-- Logo - Top Left -->
-    <a href="https://github.com/Tencent/WeKnora" target="_blank" class="header-logo" :title="$t('common.github')">
-      <img src="@/assets/img/weknora.png" alt="WeKnora" class="logo-image" />
+    <a href="https://jgjl.cn" target="_blank" class="header-logo" :title="$t('common.website')">
+      <img src="@/assets/img/brand-logo-full.png" alt="贵州建工监理咨询有限公司" class="logo-image" />
     </a>
 
     <!-- Header Links - Top Right -->
     <div class="header-links">
-      <a href="https://weknora.weixin.qq.com" target="_blank" class="header-link" :title="$t('common.website')">
+      <a href="https://jgjl.cn" target="_blank" class="header-link" :title="$t('common.website')">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round">
           <circle cx="12" cy="12" r="10" />
@@ -1195,7 +1195,7 @@ onMounted(async () => {
   cursor: pointer;
 
   .logo-image {
-    width: 120px;
+    width: 200px;
     height: auto;
   }
 }
@@ -1647,7 +1647,7 @@ onMounted(async () => {
     left: 40px;
 
     .logo-image {
-      width: 100px;
+      width: 150px;
     }
   }
 
