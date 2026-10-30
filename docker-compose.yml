@@ -40,6 +40,9 @@ services:
       dockerfile: docker/Dockerfile.app
       args:
         - APK_MIRROR_ARG=${APK_MIRROR_ARG:-}
+        # Go 模块源：不设置时容器内走 proxy.golang.org，国内不可达。
+        - GOPROXY_ARG=${GOPROXY_ARG:-https://goproxy.cn,direct}
+        - GOSUMDB_ARG=${GOSUMDB_ARG:-off}
         - WITH_ANYDOC=${WITH_ANYDOC:-1}
         # Build metadata shown on the system-info page. start_all.sh injects
         # these from git and the VERSION file; with a plain `docker compose
