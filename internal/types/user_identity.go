@@ -15,12 +15,12 @@ type UserIdentity struct {
 	// ID is a surrogate key; callers match on the (provider, tenant, subject) tuple.
 	ID uint64 `json:"id" gorm:"primaryKey;autoIncrement"`
 	// UserID references users.id.
-	UserID string `json:"user_id" gorm:"type:varchar(36);not null;index:idx_user_identity_user"`
+	UserID string `json:"user_id" gorm:"type:varchar(36);not null;index"`
 	// Provider is the identity provider key, e.g. IdentityProviderDingTalk.
 	Provider string `json:"provider" gorm:"type:varchar(32);not null;uniqueIndex:uniq_user_identity"`
 	// ProviderTenant scopes the subject to one tenant of the provider (DingTalk corpId).
 	// Empty for providers without a tenant concept.
-	ProviderTenant string `json:"provider_tenant" gorm:"type:varchar(64);not null;default:'';uniqueIndex:uniq_user_identity"`
+	ProviderTenant string `json:"provider_tenant" gorm:"type:varchar(64);uniqueIndex:uniq_user_identity"`
 	// Subject is the provider-side account id (DingTalk unionId). It is treated
 	// as an opaque identifier and never logged.
 	Subject string `json:"subject" gorm:"type:varchar(191);not null;uniqueIndex:uniq_user_identity"`

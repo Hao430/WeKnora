@@ -153,7 +153,9 @@ func newHarness(t *testing.T) *harness {
 	t.Helper()
 	users := newFakeUserStore()
 	invites := &fakeInviteStore{inv: &types.TenantInvitation{ID: 1, TenantID: 42, Role: types.TenantRoleViewer}}
-	client := &fakeDingTalkClient{profile: &dingtalk.Profile{UnionID: "union-1", UserID: "dt-1", Nick: "张三", Mobile: "13800000000"}}
+	client := &fakeDingTalkClient{profile: &dingtalk.Profile{
+		UnionID: "union-1", UserID: "dt-1", Nick: "张三", Mobile: "13800000000",
+	}}
 	repo := apprepo.NewUserIdentityRepository(newTestIdentityRepo(t))
 	svc := &dingTalkAuthService{
 		identityRepo: repo,

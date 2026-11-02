@@ -216,6 +216,8 @@ const handleGlobalDingTalkCallback = async () => {
     if (!response.success) {
       throw new Error(response.message || t('auth.dingtalkLoginFailed'))
     }
+    // 后端在本次交换里已经完成入空间，别让下面的通用逻辑再兑换一次。
+    sessionStorage.removeItem('weknora_pending_invite_token')
     await persistOIDCLoginResponse(response)
     notifyLoginSuccess(response, t, tm, formatRole, roleIcon)
   } catch (error: any) {

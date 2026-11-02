@@ -71,8 +71,10 @@ func newDingTalkTestRouter(h *AuthHandler) *gin.Engine {
 
 func newDingTalkHandler(dt interfaces.DingTalkAuthService, us interfaces.UserService) *AuthHandler {
 	cfg := &config.Config{
-		Auth:         &config.AuthConfig{RegistrationMode: config.AuthRegistrationModeInviteRegister},
-		DingTalkAuth: &config.DingTalkAuthConfig{Enable: true, CorpID: "corp-1", ClientID: "client-1", ProviderDisplayName: "钉钉"},
+		Auth: &config.AuthConfig{RegistrationMode: config.AuthRegistrationModeInviteRegister},
+		DingTalkAuth: &config.DingTalkAuthConfig{
+			Enable: true, CorpID: "corp-1", ClientID: "client-1", ProviderDisplayName: "钉钉",
+		},
 	}
 	return NewAuthHandler(cfg, us, nil, nil, nil).SetDingTalkAuth(dt)
 }
