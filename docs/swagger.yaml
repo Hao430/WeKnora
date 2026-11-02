@@ -540,6 +540,25 @@ definitions:
     - ErrVectorStoreBindingInvalid
     - ErrVectorStoreUnavailable
     - ErrModelInUse
+  github_com_Tencent_WeKnora_internal_handler_dto.AuthLoginResponse:
+    properties:
+      active_tenant:
+        $ref: '#/definitions/github_com_Tencent_WeKnora_internal_handler_dto.TenantResponse'
+      memberships:
+        items:
+          $ref: '#/definitions/github_com_Tencent_WeKnora_internal_types.Membership'
+        type: array
+      message:
+        type: string
+      refresh_token:
+        type: string
+      success:
+        type: boolean
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/github_com_Tencent_WeKnora_internal_types.User'
+    type: object
   github_com_Tencent_WeKnora_internal_handler_dto.CredentialFieldMetadata:
     properties:
       configured:
@@ -779,6 +798,11 @@ definitions:
           Per-field "configured?" map. Omitted for builtin models unless the
           caller is a system administrator. See MCPServiceResponse.Credentials.
         type: object
+      default_for:
+        items:
+          type: string
+        type: array
+        x-agent: true
       description:
         type: string
         x-agent: true
@@ -2236,6 +2260,12 @@ definitions:
         type: array
       max_rounds:
         type: integer
+      parent_slot_aggregation:
+        description: |-
+          ParentSlotAggregation collapses hits that share a ParentChunkID into one
+          top-k slot, so sibling children of the same parent cannot crowd out other
+          pages. Set by the knowledge-search API; off by default.
+        type: boolean
       query:
         type: string
       query_understand_model_id:
@@ -3192,6 +3222,41 @@ definitions:
       updated_at:
         description: Last update timestamp
         type: string
+    type: object
+  github_com_Tencent_WeKnora_internal_types.DefaultSettings:
+    properties:
+      asr_model_id:
+        description: ASRModelID is the default ASR model.
+        type: string
+      chat_model_id:
+        description: ChatModelID is the default KnowledgeQA model.
+        type: string
+      embedding_model_id:
+        description: EmbeddingModelID is the default Embedding model.
+        type: string
+      rerank_model_id:
+        description: RerankModelID is the default Rerank model.
+        type: string
+      utility_model_id:
+        description: |-
+          UtilityModelID is the KnowledgeQA model for short generation tasks
+          such as writing MCP usage instructions. Empty follows the chat default.
+        type: string
+      vlm_model_id:
+        description: VLMModelID is the default VLLM or vision-capable KnowledgeQA
+          model.
+        type: string
+    type: object
+  github_com_Tencent_WeKnora_internal_types.DingTalkConfigResponse:
+    properties:
+      corp_id:
+        type: string
+      enabled:
+        type: boolean
+      provider_display_name:
+        type: string
+      success:
+        type: boolean
     type: object
   github_com_Tencent_WeKnora_internal_types.DockerSandboxConfig:
     properties:
@@ -6930,6 +6995,9 @@ definitions:
       mineru_cloud_model:
         description: MinerU 云 API 解析参数
         type: string
+      mineru_effort:
+        description: 'hybrid: medium/high; empty = server default'
+        type: string
       mineru_enable_formula:
         type: boolean
       mineru_enable_ocr:
@@ -8770,6 +8838,11 @@ definitions:
         - $ref: '#/definitions/github_com_Tencent_WeKnora_internal_types.CredentialsConfig'
         description: 'Credentials config: third-party provider credentials (e.g. WeKnoraCloud
           AppID/AppSecret)'
+      default_settings:
+        allOf:
+        - $ref: '#/definitions/github_com_Tencent_WeKnora_internal_types.DefaultSettings'
+        description: 'Default settings: the workspace''s default model for each type
+          and purpose'
       default_storage_backend_id:
         description: DefaultStorageBackendID is the workspace default concrete storage
           instance.
@@ -9557,6 +9630,16 @@ definitions:
         description: 需要重新初始化的原因
         type: string
     type: object
+  github_com_Tencent_WeKnora_internal_types.WebSearchClients:
+    properties:
+      fetch:
+        description: Fetch is the provider type whose API reads pages, or "local"
+          for WeKnora's own reader.
+        type: string
+      search:
+        description: Search is the provider type whose API runs searches.
+        type: string
+    type: object
   github_com_Tencent_WeKnora_internal_types.WebSearchConfig:
     properties:
       api_key:
@@ -9722,6 +9805,11 @@ definitions:
     - WebSearchProviderTypeDeepSeek
   github_com_Tencent_WeKnora_internal_types.WebSearchProviderTypeInfo:
     properties:
+      clients:
+        allOf:
+        - $ref: '#/definitions/github_com_Tencent_WeKnora_internal_types.WebSearchClients'
+        description: Search and fetch readers registered for this type; nil when the
+          type is not registered.
       config_fields:
         description: Provider-specific non-secret configuration rendered dynamically
           by the frontend.
@@ -11280,6 +11368,12 @@ definitions:
         type: boolean
         x-agent: true
       db_version:
+        type: string
+        x-agent: true
+      docreader_commit_id:
+        type: string
+        x-agent: true
+      docreader_version:
         type: string
         x-agent: true
       edition:
@@ -14423,15 +14517,16 @@ definitions:
         description: Minimum keyword score
         type: number
       knowledge_base_id:
-        description: Single knowledge base ID (for backward compatibility)
+        description: KnowledgeBaseID is a single KB (for backward compatibility).
         type: string
       knowledge_base_ids:
-        description: IDs of knowledge bases to search (multi-KB support)
+        description: KnowledgeBaseIDs lists the KBs to search (multi-KB support).
         items:
           type: string
         type: array
       knowledge_ids:
-        description: IDs of specific knowledge (files) to search
+        description: KnowledgeIDs narrows the search to specific knowledge (file)
+          IDs.
         items:
           type: string
         type: array
@@ -14439,19 +14534,32 @@ definitions:
         description: Number of results to return
         type: integer
       mentioned_items:
-        description: Optional scoped tag mentions
+        description: MentionedItems carries optional scoped tag mentions.
         items:
           $ref: '#/definitions/internal_handler_session.MentionedItemRequest'
         type: array
+      parent_slot_aggregation:
+        description: |-
+          ParentSlotAggregation gives one top-k slot to all hits sharing a parent
+          chunk, returning the parent body with the matched child ids.
+        type: boolean
       query:
-        description: Query text to search for
+        description: |-
+          Query is the text query. It is required unless QueryImage is set: an
+          image-only request searches by visual similarity.
+        type: string
+      query_image:
+        description: |-
+          QueryImage is a base64 (optionally a data URI) image used as the vector
+          query instead of Query text. When both are set the image drives vector
+          recall and the text drives keyword recall and rerank.
         type: string
       rerank:
         allOf:
         - $ref: '#/definitions/github_com_Tencent_WeKnora_internal_types.RerankOptions'
         description: Rerank override
       tag_ids:
-        description: Tag IDs for filtering within a single KB
+        description: TagIDs filters within a single KB.
         items:
           type: string
         type: array
@@ -14459,8 +14567,6 @@ definitions:
         description: Optional overrides of the tenant retrieval config. Omitted fields
           keep it.
         type: number
-    required:
-    - query
     type: object
   internal_handler_session.SteerMessageRequest:
     properties:
@@ -15404,6 +15510,114 @@ paths:
           schema:
             $ref: '#/definitions/internal_handler.GetAuthConfigResponse'
       summary: 获取认证配置
+      tags:
+      - 认证
+  /auth/dingtalk/callback:
+    get:
+      consumes:
+      - application/json
+      description: GET 为浏览器回调：校验 state/nonce 后把 code 交还给前端；POST 完成 code 交换，登录或绑定。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_handler_dto.AuthLoginResponse'
+        "302":
+          description: Found
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+        "401":
+          description: 绑定未登录
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+        "403":
+          description: 注册关闭或账号停用
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+        "409":
+          description: 邮箱或钉钉身份已被占用
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+      summary: 钉钉回调
+      tags:
+      - 认证
+    post:
+      consumes:
+      - application/json
+      description: GET 为浏览器回调：校验 state/nonce 后把 code 交还给前端；POST 完成 code 交换，登录或绑定。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_handler_dto.AuthLoginResponse'
+        "302":
+          description: Found
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+        "401":
+          description: 绑定未登录
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+        "403":
+          description: 注册关闭或账号停用
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+        "409":
+          description: 邮箱或钉钉身份已被占用
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+      summary: 钉钉回调
+      tags:
+      - 认证
+  /auth/dingtalk/config:
+    get:
+      description: 返回钉钉扫码登录是否启用，供登录页决定是否展示入口
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_types.DingTalkConfigResponse'
+        "404":
+          description: 钉钉登录未启用
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+      summary: 获取钉钉登录配置
+      tags:
+      - 认证
+  /auth/dingtalk/start:
+    get:
+      description: 默认 302 跳转到钉钉授权页；mode=bind 时返回授权地址 JSON，供已登录用户绑定账号。
+      parameters:
+      - description: bind 时返回 JSON 而非 302
+        in: query
+        name: mode
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: authorization_url
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "302":
+          description: Found
+        "404":
+          description: 钉钉登录未启用
+          schema:
+            $ref: '#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError'
+      summary: 发起钉钉登录
       tags:
       - 认证
   /auth/invitations/lookup:
@@ -28405,10 +28619,12 @@ paths:
         id: system.get_info
         risk: read
       x-agent-hint: Reads the backend version, edition, build, runtime, database migration
-        status and configured engines. Empty or unknown means unavailable information.
-        Engine configuration does not prove connectivity. Raw migration errors are
-        omitted. Frontend build/version is separate and is not reported by this API;
-        do not infer frontend/backend version agreement or available upgrades.
+        status and configured engines. Docreader build information is omitted when
+        its service is unavailable or does not support GetInfo. Empty or unknown means
+        unavailable information. Engine configuration does not prove connectivity.
+        Raw migration errors are omitted. Frontend build/version is separate and is
+        not reported by this API; do not infer frontend/backend version agreement
+        or available upgrades.
   /system/parser-engines:
     get:
       produces:
@@ -29237,7 +29453,10 @@ paths:
     get:
       consumes:
       - application/json
-      description: 获取空间级别的KV配置（支持web-search-config、prompt-templates、parser-engine-config、storage-engine-config、chat-history-config、retrieval-config）
+      description: |-
+        获取空间级别的KV配置。支持 web-search-config、prompt-templates、parser-engine-config、
+        storage-engine-config、chat-history-config、retrieval-config、memory-config、
+        assistant-config、default-settings。
       parameters:
       - description: 配置键名
         in: path
@@ -29265,7 +29484,9 @@ paths:
     put:
       consumes:
       - application/json
-      description: 更新空间级别的KV配置（支持web-search-config、parser-engine-config、storage-engine-config、chat-history-config、retrieval-config）
+      description: |-
+        更新空间级别的KV配置。支持 web-search-config、parser-engine-config、storage-engine-config、
+        chat-history-config、retrieval-config、memory-config、assistant-config、default-settings。
       parameters:
       - description: 配置键名
         in: path

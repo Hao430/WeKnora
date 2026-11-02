@@ -87,6 +87,7 @@ import (
 	"github.com/Tencent/WeKnora/internal/im/wechat"
 	"github.com/Tencent/WeKnora/internal/im/wecom"
 	"github.com/Tencent/WeKnora/internal/im/yunzhijia"
+	dingtalkAuth "github.com/Tencent/WeKnora/internal/infrastructure/dingtalk"
 	"github.com/Tencent/WeKnora/internal/infrastructure/docparser"
 	infra_web_search "github.com/Tencent/WeKnora/internal/infrastructure/web_search"
 	"github.com/Tencent/WeKnora/internal/logger"
@@ -152,6 +153,18 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	// External service clients
 	logger.Debugf(ctx, "[Container] Registering external service clients...")
 	must(container.Provide(initDocReaderClient))
+	// DingTalk login app (网页应用) client: separate credentials from the IM
+	// bot adapter above, so it gets its own instance and token cache.
+	must(container.Provide(func(cfg *config.Config) dingtalkAuth.Client {
+		if cfg == nil || cfg.DingTalkAuth == nil {
+			return dingtalkAuth.NewClient(dingtalkAuth.Config{})
+		}
+		return dingtalkAuth.NewClient(dingtalkAuth.Config{
+			CorpID:       cfg.DingTalkAuth.CorpID,
+			ClientID:     cfg.DingTalkAuth.ClientID,
+			ClientSecret: cfg.DingTalkAuth.ClientSecret,
+		})
+	}))
 	must(container.Provide(docparser.NewImageResolver))
 	must(container.Provide(initOllamaService))
 	must(container.Provide(initNeo4jClient))
@@ -177,6 +190,7 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	must(container.Provide(repository.NewMessageSuggestionRepository))
 	must(container.Provide(repository.NewModelRepository))
 	must(container.Provide(repository.NewUserRepository))
+	must(container.Provide(repository.NewUserIdentityRepository))
 	must(container.Provide(repository.NewAuthTokenRepository))
 	must(container.Provide(repository.NewSystemSettingRepository))
 	must(container.Provide(repository.NewModelCatalogRepository))
@@ -259,6 +273,7 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	must(container.Provide(service.NewTenantAPIKeyService))
 	must(container.Provide(service.NewTenantMemberService))
 	must(container.Provide(service.NewTenantInvitationService))
+	must(container.Provide(service.NewDingTalkAuthService))
 	must(container.Provide(service.NewAuditLogService))
 	must(container.Provide(service.NewAuditLogRetentionRunner))
 	must(container.Provide(service.NewKnowledgeBaseService))
@@ -698,6 +713,9 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	must(container.Provide(handler.NewEvaluationHandler))
 	must(container.Provide(handler.NewInitializationHandler))
 	must(container.Provide(handler.NewAuthHandler))
+	must(container.Invoke(func(h *handler.AuthHandler, svc interfaces.DingTalkAuthService) {
+		h.SetDingTalkAuth(svc)
+	}))
 	must(container.Provide(handler.NewSystemHandler))
 	// Dig resolves exact types; adapt the registered service to the handler's
 	// narrower SharedAgentLookup interface at the composition boundary.

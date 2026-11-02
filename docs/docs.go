@@ -1341,6 +1341,170 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/dingtalk/callback": {
+            "get": {
+                "description": "GET 为浏览器回调：校验 state/nonce 后把 code 交还给前端；POST 完成 code 交换，登录或绑定。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "钉钉回调",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_handler_dto.AuthLoginResponse"
+                        }
+                    },
+                    "302": {
+                        "description": "Found"
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    },
+                    "401": {
+                        "description": "绑定未登录",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    },
+                    "403": {
+                        "description": "注册关闭或账号停用",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    },
+                    "409": {
+                        "description": "邮箱或钉钉身份已被占用",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "GET 为浏览器回调：校验 state/nonce 后把 code 交还给前端；POST 完成 code 交换，登录或绑定。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "钉钉回调",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_handler_dto.AuthLoginResponse"
+                        }
+                    },
+                    "302": {
+                        "description": "Found"
+                    },
+                    "400": {
+                        "description": "参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    },
+                    "401": {
+                        "description": "绑定未登录",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    },
+                    "403": {
+                        "description": "注册关闭或账号停用",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    },
+                    "409": {
+                        "description": "邮箱或钉钉身份已被占用",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/dingtalk/config": {
+            "get": {
+                "description": "返回钉钉扫码登录是否启用，供登录页决定是否展示入口",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "获取钉钉登录配置",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_types.DingTalkConfigResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "钉钉登录未启用",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/dingtalk/start": {
+            "get": {
+                "description": "默认 302 跳转到钉钉授权页；mode=bind 时返回授权地址 JSON，供已登录用户绑定账号。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "认证"
+                ],
+                "summary": "发起钉钉登录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "bind 时返回 JSON 而非 302",
+                        "name": "mode",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "authorization_url",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "302": {
+                        "description": "Found"
+                    },
+                    "404": {
+                        "description": "钉钉登录未启用",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_errors.AppError"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/invitations/lookup": {
             "post": {
                 "description": "根据邀请链接中的 token 返回邀请上下文（空间名 / 角色 / 过期时间），\n供注册页展示。无认证；token 无效或被撤销返回 410。\n使用 POST + body 而非 GET + path，避免 token 落入访问日志 / 浏览器历史 / tracing。",
@@ -21364,7 +21528,7 @@ const docTemplate = `{
                     "id": "system.get_info",
                     "risk": "read"
                 },
-                "x-agent-hint": "Reads the backend version, edition, build, runtime, database migration status and configured engines. Empty or unknown means unavailable information. Engine configuration does not prove connectivity. Raw migration errors are omitted. Frontend build/version is separate and is not reported by this API; do not infer frontend/backend version agreement or available upgrades."
+                "x-agent-hint": "Reads the backend version, edition, build, runtime, database migration status and configured engines. Docreader build information is omitted when its service is unavailable or does not support GetInfo. Empty or unknown means unavailable information. Engine configuration does not prove connectivity. Raw migration errors are omitted. Frontend build/version is separate and is not reported by this API; do not infer frontend/backend version agreement or available upgrades."
             }
         },
         "/system/parser-engines": {
@@ -21899,7 +22063,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "获取空间级别的KV配置（支持web-search-config、prompt-templates、parser-engine-config、storage-engine-config、chat-history-config、retrieval-config）",
+                "description": "获取空间级别的KV配置。支持 web-search-config、prompt-templates、parser-engine-config、\nstorage-engine-config、chat-history-config、retrieval-config、memory-config、\nassistant-config、default-settings。",
                 "consumes": [
                     "application/json"
                 ],
@@ -21944,7 +22108,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "更新空间级别的KV配置（支持web-search-config、parser-engine-config、storage-engine-config、chat-history-config、retrieval-config）",
+                "description": "更新空间级别的KV配置。支持 web-search-config、parser-engine-config、storage-engine-config、\nchat-history-config、retrieval-config、memory-config、assistant-config、default-settings。",
                 "consumes": [
                     "application/json"
                 ],
@@ -24923,6 +25087,35 @@ const docTemplate = `{
                 "ErrModelInUse"
             ]
         },
+        "github_com_Tencent_WeKnora_internal_handler_dto.AuthLoginResponse": {
+            "type": "object",
+            "properties": {
+                "active_tenant": {
+                    "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_handler_dto.TenantResponse"
+                },
+                "memberships": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_types.Membership"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_types.User"
+                }
+            }
+        },
         "github_com_Tencent_WeKnora_internal_handler_dto.CredentialFieldMetadata": {
             "type": "object",
             "properties": {
@@ -25258,6 +25451,13 @@ const docTemplate = `{
                     "additionalProperties": {
                         "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_handler_dto.CredentialFieldMetadata"
                     }
+                },
+                "default_for": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-agent": true
                 },
                 "description": {
                     "type": "string",
@@ -27151,6 +27351,10 @@ const docTemplate = `{
                 "max_rounds": {
                     "type": "integer"
                 },
+                "parent_slot_aggregation": {
+                    "description": "ParentSlotAggregation collapses hits that share a ParentChunkID into one\ntop-k slot, so sibling children of the same parent cannot crowd out other\npages. Set by the knowledge-search API; off by default.",
+                    "type": "boolean"
+                },
                 "query": {
                     "type": "string"
                 },
@@ -28219,6 +28423,52 @@ const docTemplate = `{
                 "updated_at": {
                     "description": "Last update timestamp",
                     "type": "string"
+                }
+            }
+        },
+        "github_com_Tencent_WeKnora_internal_types.DefaultSettings": {
+            "type": "object",
+            "properties": {
+                "asr_model_id": {
+                    "description": "ASRModelID is the default ASR model.",
+                    "type": "string"
+                },
+                "chat_model_id": {
+                    "description": "ChatModelID is the default KnowledgeQA model.",
+                    "type": "string"
+                },
+                "embedding_model_id": {
+                    "description": "EmbeddingModelID is the default Embedding model.",
+                    "type": "string"
+                },
+                "rerank_model_id": {
+                    "description": "RerankModelID is the default Rerank model.",
+                    "type": "string"
+                },
+                "utility_model_id": {
+                    "description": "UtilityModelID is the KnowledgeQA model for short generation tasks\nsuch as writing MCP usage instructions. Empty follows the chat default.",
+                    "type": "string"
+                },
+                "vlm_model_id": {
+                    "description": "VLMModelID is the default VLLM or vision-capable KnowledgeQA model.",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Tencent_WeKnora_internal_types.DingTalkConfigResponse": {
+            "type": "object",
+            "properties": {
+                "corp_id": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "provider_display_name": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -33014,6 +33264,10 @@ const docTemplate = `{
                     "description": "MinerU 云 API 解析参数",
                     "type": "string"
                 },
+                "mineru_effort": {
+                    "description": "hybrid: medium/high; empty = server default",
+                    "type": "string"
+                },
                 "mineru_enable_formula": {
                     "type": "boolean"
                 },
@@ -35310,6 +35564,14 @@ const docTemplate = `{
                         }
                     ]
                 },
+                "default_settings": {
+                    "description": "Default settings: the workspace's default model for each type and purpose",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_types.DefaultSettings"
+                        }
+                    ]
+                },
                 "default_storage_backend_id": {
                     "description": "DefaultStorageBackendID is the workspace default concrete storage instance.",
                     "type": "string"
@@ -36294,6 +36556,19 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_Tencent_WeKnora_internal_types.WebSearchClients": {
+            "type": "object",
+            "properties": {
+                "fetch": {
+                    "description": "Fetch is the provider type whose API reads pages, or \"local\" for WeKnora's own reader.",
+                    "type": "string"
+                },
+                "search": {
+                    "description": "Search is the provider type whose API runs searches.",
+                    "type": "string"
+                }
+            }
+        },
         "github_com_Tencent_WeKnora_internal_types.WebSearchConfig": {
             "type": "object",
             "properties": {
@@ -36514,6 +36789,14 @@ const docTemplate = `{
         "github_com_Tencent_WeKnora_internal_types.WebSearchProviderTypeInfo": {
             "type": "object",
             "properties": {
+                "clients": {
+                    "description": "Search and fetch readers registered for this type; nil when the type is not registered.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_types.WebSearchClients"
+                        }
+                    ]
+                },
                 "config_fields": {
                     "description": "Provider-specific non-secret configuration rendered dynamically by the frontend.",
                     "type": "array",
@@ -38512,6 +38795,14 @@ const docTemplate = `{
                     "x-agent": true
                 },
                 "db_version": {
+                    "type": "string",
+                    "x-agent": true
+                },
+                "docreader_commit_id": {
+                    "type": "string",
+                    "x-agent": true
+                },
+                "docreader_version": {
                     "type": "string",
                     "x-agent": true
                 },
@@ -42858,9 +43149,6 @@ const docTemplate = `{
         },
         "internal_handler_session.SearchKnowledgeRequest": {
             "type": "object",
-            "required": [
-                "query"
-            ],
             "properties": {
                 "disable_keywords_match": {
                     "description": "Vector recall only",
@@ -42875,18 +43163,18 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "knowledge_base_id": {
-                    "description": "Single knowledge base ID (for backward compatibility)",
+                    "description": "KnowledgeBaseID is a single KB (for backward compatibility).",
                     "type": "string"
                 },
                 "knowledge_base_ids": {
-                    "description": "IDs of knowledge bases to search (multi-KB support)",
+                    "description": "KnowledgeBaseIDs lists the KBs to search (multi-KB support).",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "knowledge_ids": {
-                    "description": "IDs of specific knowledge (files) to search",
+                    "description": "KnowledgeIDs narrows the search to specific knowledge (file) IDs.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -42897,14 +43185,22 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "mentioned_items": {
-                    "description": "Optional scoped tag mentions",
+                    "description": "MentionedItems carries optional scoped tag mentions.",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/internal_handler_session.MentionedItemRequest"
                     }
                 },
+                "parent_slot_aggregation": {
+                    "description": "ParentSlotAggregation gives one top-k slot to all hits sharing a parent\nchunk, returning the parent body with the matched child ids.",
+                    "type": "boolean"
+                },
                 "query": {
-                    "description": "Query text to search for",
+                    "description": "Query is the text query. It is required unless QueryImage is set: an\nimage-only request searches by visual similarity.",
+                    "type": "string"
+                },
+                "query_image": {
+                    "description": "QueryImage is a base64 (optionally a data URI) image used as the vector\nquery instead of Query text. When both are set the image drives vector\nrecall and the text drives keyword recall and rerank.",
                     "type": "string"
                 },
                 "rerank": {
@@ -42916,7 +43212,7 @@ const docTemplate = `{
                     ]
                 },
                 "tag_ids": {
-                    "description": "Tag IDs for filtering within a single KB",
+                    "description": "TagIDs filters within a single KB.",
                     "type": "array",
                     "items": {
                         "type": "string"

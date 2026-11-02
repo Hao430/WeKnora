@@ -51,6 +51,12 @@ var noAuthAPI = map[string][]string{
 	"/api/v1/auth/oidc/url":           {"GET"},
 	"/api/v1/auth/oidc/start":         {"GET"},
 	"/api/v1/auth/oidc/callback":      {"GET"},
+	// DingTalk login: the browser returns with a signed state (no bearer), and
+	// the SPA then posts the code back. POST also serves mode=bind, which
+	// parses its own Bearer since the route is outside the middleware.
+	"/api/v1/auth/dingtalk/config":   {"GET"},
+	"/api/v1/auth/dingtalk/start":    {"GET"},
+	"/api/v1/auth/dingtalk/callback": {"GET", "POST"},
 	// MCP OAuth provider redirect: the third-party authorization server
 	// redirects the browser here without a WeKnora bearer token. The request
 	// is authenticated by the opaque, single-use `state` parameter instead.

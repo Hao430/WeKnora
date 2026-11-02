@@ -74,8 +74,8 @@ type dingTalkAuthService struct {
 // identity subject: the same unionId in another corp is a different account.
 func NewDingTalkAuthService(
 	identityRepo interfaces.UserIdentityRepository,
-	users userStore,
-	invitations inviteStore,
+	users interfaces.UserService,
+	invitations interfaces.TenantInvitationService,
 	client dingtalk.Client,
 	cfg *config.Config,
 ) interfaces.DingTalkAuthService {

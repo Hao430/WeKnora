@@ -229,6 +229,12 @@ func RegisterAuthRoutes(r *gin.RouterGroup, handler *handler.AuthHandler, g *rba
 	r.GET("/auth/oidc/callback", handler.OIDCRedirectCallback)
 	// /auth/oidc/start：直连 302 跳转到 OIDC 提供方，供前端无法走 JS 拉取 URL 的场景直接发起登录
 	r.GET("/auth/oidc/start", handler.OIDCStart)
+	// 钉钉登录：config 只读开关，start 发起授权，callback 的 GET 把 code 交还前端、
+	// POST 才做交换（容器内免登与扫码共用同一个交换实现）。
+	r.GET("/auth/dingtalk/config", publicAuthRL, handler.GetDingTalkConfig)
+	r.GET("/auth/dingtalk/start", publicAuthRL, handler.DingTalkStart)
+	r.GET("/auth/dingtalk/callback", publicAuthRL, handler.DingTalkCallback)
+	r.POST("/auth/dingtalk/callback", publicAuthRL, handler.DingTalkCallback)
 	r.POST("/auth/refresh", handler.RefreshToken)
 	r.GET("/auth/validate", handler.ValidateToken)
 	r.POST("/auth/logout", handler.Logout)

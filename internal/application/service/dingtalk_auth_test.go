@@ -155,8 +155,13 @@ func newHarness(t *testing.T) *harness {
 	invites := &fakeInviteStore{inv: &types.TenantInvitation{ID: 1, TenantID: 42, Role: types.TenantRoleViewer}}
 	client := &fakeDingTalkClient{profile: &dingtalk.Profile{UnionID: "union-1", UserID: "dt-1", Nick: "张三", Mobile: "13800000000"}}
 	repo := apprepo.NewUserIdentityRepository(newTestIdentityRepo(t))
-	cfg := &config.Config{DingTalkAuth: &config.DingTalkAuthConfig{Enable: true, CorpID: "corp-1"}}
-	svc := NewDingTalkAuthService(repo, users, invites, client, cfg).(*dingTalkAuthService)
+	svc := &dingTalkAuthService{
+		identityRepo: repo,
+		users:        users,
+		invitations:  invites,
+		client:       client,
+		corpID:       "corp-1",
+	}
 	return &harness{svc: svc, users: users, invites: invites, client: client, identity: repo}
 }
 

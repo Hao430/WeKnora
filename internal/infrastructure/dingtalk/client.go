@@ -32,6 +32,11 @@ const (
 	maxErrorBody = 512
 )
 
+// ErrCodeRejected means DingTalk refused the code or the profile lookup
+// (expired code, wrong app, revoked permission). Callers translate it to a
+// user-facing "please scan again" instead of an internal error.
+var ErrCodeRejected = errors.New("dingtalk rejected the login code")
+
 // Config is the subset of the DingTalk application credentials the login flow
 // needs. ClientID/ClientSecret belong to the 网页应用, not the IM robot.
 type Config struct {
@@ -117,10 +122,10 @@ func (c *client) GetUserByInnerCode(ctx context.Context, code string) (*Profile,
 		return nil, err
 	}
 	if info.ErrCode != 0 {
-		return nil, fmt.Errorf("dingtalk getuserinfo errcode=%d errmsg=%s", info.ErrCode, info.ErrMsg)
+		return nil, fmt.Errorf("%w: getuserinfo errcode=%d errmsg=%s", ErrCodeRejected, info.ErrCode, info.ErrMsg)
 	}
 	if info.Result.UserID == "" {
-		return nil, errors.New("dingtalk returned no userid for the login code")
+		return nil, fmt.Errorf("%w: no userid in the getuserinfo response", ErrCodeRejected)
 	}
 
 	var detail struct {
@@ -141,10 +146,10 @@ func (c *client) GetUserByInnerCode(ctx context.Context, code string) (*Profile,
 		return nil, err
 	}
 	if detail.ErrCode != 0 {
-		return nil, fmt.Errorf("dingtalk user/get errcode=%d errmsg=%s", detail.ErrCode, detail.ErrMsg)
+		return nil, fmt.Errorf("%w: user/get errcode=%d errmsg=%s", ErrCodeRejected, detail.ErrCode, detail.ErrMsg)
 	}
 	if detail.Result.UnionID == "" {
-		return nil, errors.New("dingtalk returned no unionId for the login code")
+		return nil, fmt.Errorf("%w: no unionId in the user/get response", ErrCodeRejected)
 	}
 	return &Profile{
 		UnionID: detail.Result.UnionID,
@@ -201,7 +206,7 @@ func (c *client) GetUserByOAuthCode(ctx context.Context, code string) (*Profile,
 		return nil, err
 	}
 	if me.UnionID == "" {
-		return nil, errors.New("dingtalk returned no unionId for the login code")
+		return nil, fmt.Errorf("%w: no unionId in the contact/users/me response", ErrCodeRejected)
 	}
 	return &Profile{UnionID: me.UnionID, Nick: me.Nick, Mobile: me.Mobile}, nil
 }

@@ -48,6 +48,10 @@ type AuthHandler struct {
 	// fixtures — the share-link endpoints respond 503 rather than
 	// blocking the rest of the auth surface.
 	invitationSvc interfaces.TenantInvitationService
+	// dingTalkAuth is required for the DingTalk login routes. When nil the
+	// endpoints report 404, the same answer an operator gets by leaving
+	// dingtalk_auth.enable off.
+	dingTalkAuth interfaces.DingTalkAuthService
 }
 
 // NewAuthHandler creates a new auth handler instance with the provided services
@@ -84,6 +88,14 @@ func NewAuthHandler(configInfo *config.Config,
 		systemSettingSvc: systemSettingSvc,
 		invitationSvc:    invitationSvc,
 	}
+}
+
+// SetDingTalkAuth wires the DingTalk login service. A setter (rather than a
+// constructor argument) keeps NewAuthHandler's signature stable for the many
+// existing test fixtures that have no DingTalk dependency.
+func (h *AuthHandler) SetDingTalkAuth(svc interfaces.DingTalkAuthService) *AuthHandler {
+	h.dingTalkAuth = svc
+	return h
 }
 
 // resolveRegistrationMode returns the currently active registration mode.

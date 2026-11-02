@@ -39,6 +39,15 @@ type DingTalkBindInput struct {
 	Source DingTalkLoginSource
 }
 
+// DingTalkConfigResponse tells the login page whether to render the DingTalk
+// entry. It never carries the client secret.
+type DingTalkConfigResponse struct {
+	Success             bool   `json:"success"`
+	Enabled             bool   `json:"enabled"`
+	ProviderDisplayName string `json:"provider_display_name,omitempty"`
+	CorpID              string `json:"corp_id,omitempty"`
+}
+
 // DingTalkLoginResult carries a completed login.
 type DingTalkLoginResult struct {
 	// User is the local account owning the DingTalk identity.
