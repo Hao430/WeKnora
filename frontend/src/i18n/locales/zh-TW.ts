@@ -2659,7 +2659,7 @@ export default {
     askUser: '向使用者提問'
   },
   assistant: {
-    title: 'WeKnora 助手',
+    title: '建工·知庫助手',
     newConversation: '新對話',
     history: '歷史對話',
     untitledConversation: '未命名對話',
@@ -9091,8 +9091,8 @@ export default {
     reopen: '新手引導',
     steps: {
       assistant: {
-        title: '認識 WeKnora 助手',
-        desc: '可以詢問 WeKnora 的版本、功能與設定，也可以結合目前頁面，以你的身分建立智慧代理、設定定時任務或整理知識。'
+        title: '認識建工·知庫助手',
+        desc: '可以詢問建工·知庫的版本、功能與設定，也可以結合目前頁面，以你的身分建立智慧代理、設定定時任務或整理知識。'
       },
       done: {
         title: '一切就緒',
@@ -9116,10 +9116,10 @@ export default {
       },
       knowledge: {
         title: '建立你的知識庫',
-        desc: '知識庫是一切的起點：上傳文件、網頁或 FAQ，WeKnora 會自動解析並建立索引。點擊這裡進入知識庫。'
+        desc: '知識庫是一切的起點：上傳文件、網頁或 FAQ，建工·知庫會自動解析並建立索引。點擊這裡進入知識庫。'
       },
       welcome: {
-        title: '歡迎使用 WeKnora',
+        title: '歡迎使用建工·知庫',
         desc: '只需幾步，帶你快速了解知識庫、對話與智慧代理的核心用法。點擊「下一步」開始。'
       }
     }
