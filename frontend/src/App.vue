@@ -9,6 +9,7 @@ import UploadConfirmHost from '@/components/UploadConfirmHost.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
 import { getCurrentUser, userInfoFromApi } from '@/api/auth'
+import { exchangeDingTalkCode } from '@/api/auth/dingtalk'
 import { consumePendingTenantSwitchToast } from '@/utils/tenantSwitch'
 import { useRoleLabel } from '@/composables/useRoleLabel'
 import { notifyLoginSuccess } from '@/utils/loginNotify'
@@ -173,6 +174,58 @@ const handleGlobalOIDCCallback = async () => {
   }
 }
 
+// 钉钉登录/绑定回跳：GET 回调只把 code 交回页面，交换在这里完成，和容器内
+// 免登走同一个 POST 接口。
+const DINGTALK_MODE_KEY = 'weknora_dingtalk_mode'
+const DINGTALK_RETURN_KEY = 'weknora_dingtalk_return'
+
+const handleGlobalDingTalkCallback = async () => {
+  const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : ''
+  if (!hash) return
+
+  const params = new URLSearchParams(hash)
+  const dingTalkError = params.get('dingtalk_error')
+  const dingTalkCode = params.get('dingtalk_code')
+  if (!dingTalkError && !dingTalkCode) return
+
+  const mode = sessionStorage.getItem(DINGTALK_MODE_KEY)
+  const returnTo = sessionStorage.getItem(DINGTALK_RETURN_KEY)
+  sessionStorage.removeItem(DINGTALK_MODE_KEY)
+  sessionStorage.removeItem(DINGTALK_RETURN_KEY)
+  clearOIDCCallbackState('/login')
+
+  if (dingTalkError || !dingTalkCode) {
+    await router.replace('/login')
+    MessagePlugin.error(t('auth.dingtalkLoginFailed'))
+    return
+  }
+
+  try {
+    if (mode === 'bind') {
+      await exchangeDingTalkCode({ code: dingTalkCode, source: 'oauth', mode: 'bind' })
+      MessagePlugin.success(t('auth.dingtalkBindSuccess'))
+      await router.replace(returnTo || '/platform/settings?section=userprofile')
+      return
+    }
+
+    const response = await exchangeDingTalkCode({
+      code: dingTalkCode,
+      source: 'oauth',
+      invite_token: sessionStorage.getItem('weknora_pending_invite_token') || undefined,
+    })
+    if (!response.success) {
+      throw new Error(response.message || t('auth.dingtalkLoginFailed'))
+    }
+    await persistOIDCLoginResponse(response)
+    notifyLoginSuccess(response, t, tm, formatRole, roleIcon)
+  } catch (error: any) {
+    console.error('DingTalk callback handling failed:', error)
+    authStore.logout()
+    await router.replace('/login')
+    MessagePlugin.error(error?.message || t('auth.dingtalkLoginFailed'))
+  }
+}
+
 let updateCheckTimer: ReturnType<typeof setInterval> | null = null
 
 // Pending invitations poll: fires once on mount (logged-in case) and
@@ -242,6 +295,7 @@ const showPendingTenantSwitchToast = () => {
 
 onMounted(() => {
   handleGlobalOIDCCallback()
+  handleGlobalDingTalkCallback()
   showPendingTenantSwitchToast()
 
   // Auto check for updates on startup

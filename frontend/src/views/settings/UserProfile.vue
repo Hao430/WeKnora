@@ -164,6 +164,19 @@
             </t-popup>
           </template>
         </div>
+
+        <!-- 钉钉账号绑定：仅当部署开启钉钉登录时出现。绑定在浏览器回跳后
+             由 App.vue 完成，这里只负责发起与记录返回位置。 -->
+        <div v-if="dingtalkEnabled" class="setting-row">
+          <div class="setting-info">
+            <label>{{ $t('auth.dingtalkBind') }}</label>
+          </div>
+          <div class="setting-control">
+            <t-button variant="outline" :loading="dingtalkBinding" @click="bindDingTalk">
+              {{ $t('auth.dingtalkBind') }}
+            </t-button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -184,6 +197,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { newPasswordRules } from '@/utils/passwordPolicy'
+import { getDingTalkConfig, getDingTalkBindURL } from '@/api/auth/dingtalk'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -202,6 +216,37 @@ const passwordForm = reactive({
   newPassword: '',
   confirmPassword: '',
 })
+
+const dingtalkEnabled = ref(false)
+const dingtalkBinding = ref(false)
+
+const loadDingTalkAvailability = async () => {
+  try {
+    const resp = await getDingTalkConfig()
+    dingtalkEnabled.value = !!resp.success && !!resp.enabled
+  } catch {
+    dingtalkEnabled.value = false
+  }
+}
+
+const bindDingTalk = async () => {
+  try {
+    dingtalkBinding.value = true
+    const resp = await getDingTalkBindURL()
+    if (!resp.success || !resp.authorization_url) {
+      MessagePlugin.error(t('auth.dingtalkLoginFailed'))
+      return
+    }
+    // 回跳后 App.vue 靠这两个值决定「绑定」还是「登录」，以及回到哪一页。
+    sessionStorage.setItem('weknora_dingtalk_mode', 'bind')
+    sessionStorage.setItem('weknora_dingtalk_return', window.location.pathname + window.location.search)
+    window.location.href = resp.authorization_url
+  } catch (error: any) {
+    MessagePlugin.error(error?.message || t('auth.dingtalkLoginFailed'))
+  } finally {
+    dingtalkBinding.value = false
+  }
+}
 
 const loadPasswordPolicy = async () => {
   try {
@@ -330,7 +375,10 @@ const submitPasswordChange = async () => {
   }
 }
 
-onMounted(loadInfo)
+onMounted(() => {
+  loadInfo()
+  loadDingTalkAvailability()
+})
 </script>
 
 <style lang="less" scoped>

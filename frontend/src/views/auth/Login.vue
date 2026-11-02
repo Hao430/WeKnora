@@ -180,6 +180,16 @@
           </div>
 
           <div class="form-content">
+            <!-- 钉钉扫码是主入口；邮箱表单保留给已有本地账号的使用者。 -->
+            <template v-if="dingtalkEnabled">
+              <t-button theme="primary" size="large" block :loading="dingtalkLoading" :disabled="loading"
+                class="dingtalk-button" @click="handleDingTalkLogin()">
+                {{ dingtalkLoading ? $t('auth.redirectingToDingTalk') : dingtalkLoginText }}
+              </t-button>
+              <div class="oidc-divider">
+                <span>{{ $t('auth.orContinueWith') }}</span>
+              </div>
+            </template>
             <t-form ref="formRef" :data="formData" :rules="formRules" @submit="handleLogin" layout="vertical"
               label-align="top">
               <t-form-item :label="$t('auth.email')" name="email">
@@ -342,6 +352,8 @@ import {
   registerByInvite,
   type InviteLookup,
 } from '@/api/auth'
+import { getDingTalkConfig, exchangeDingTalkCode, dingTalkLoginURL } from '@/api/auth/dingtalk'
+import { isDingTalkContainer, requestDingTalkAuthCode } from '@/utils/dingtalk'
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 
@@ -395,6 +407,10 @@ const isRegisterMode = ref(false)
 const showLanguageMenu = ref(false)
 const oidcEnabled = ref(false)
 const oidcProviderName = ref('')
+const dingtalkEnabled = ref(false)
+const dingtalkLoading = ref(false)
+const dingtalkProviderName = ref('')
+const dingtalkCorpId = ref('')
 // Wait for configuration before showing a registration entry.
 const registrationMode = ref('')
 const registrationEnabled = computed(() => canRegister(registrationMode.value, !!inviteLookup.value))
@@ -427,6 +443,11 @@ const oidcLoginText = computed(() => {
   }
   return t('auth.oidcLogin')
 })
+const dingtalkLoginText = computed(() =>
+  dingtalkProviderName.value
+    ? t('auth.dingtalkLoginWith', { provider: dingtalkProviderName.value })
+    : t('auth.dingtalkLogin')
+)
 const currentLangOption = computed(() => languageOptions.find(l => l.value === currentLanguage.value))
 
 // Login form data
@@ -590,6 +611,26 @@ const loadOIDCConfig = async () => {
   }
 }
 
+const loadDingTalkConfig = async () => {
+  try {
+    const response = await getDingTalkConfig()
+    dingtalkEnabled.value = !!response.success && !!response.enabled
+    dingtalkProviderName.value = response.provider_display_name || ''
+    dingtalkCorpId.value = response.corp_id || ''
+  } catch {
+    dingtalkEnabled.value = false
+    dingtalkProviderName.value = ''
+    dingtalkCorpId.value = ''
+  }
+}
+
+// Both third-party entries load together so the card never renders a
+// half-known set of buttons.
+const loadLoginProviders = async () => {
+  loadOIDCConfig()
+  loadDingTalkConfig()
+}
+
 // Registration stays hidden if configuration cannot be loaded.
 const loadAuthConfig = async () => {
   try {
@@ -623,6 +664,42 @@ const handleOIDCLogin = async () => {
     MessagePlugin.error(error.message || t('auth.oidcLoginFailed'))
   } finally {
     oidcLoading.value = false
+  }
+}
+
+// 钉钉登录：容器内走 JSAPI 免登并直接换会话；浏览器走 302 扫码。
+// silent 用于挂载时自动发起——失败不该弹错，页面上还有按钮可点。
+const handleDingTalkLogin = async (silent = false) => {
+  try {
+    dingtalkLoading.value = true
+    // 跳转外站会丢掉 ?token=，先暂存，回来由 App.vue 兑换。
+    if (inviteToken.value) {
+      sessionStorage.setItem('weknora_pending_invite_token', inviteToken.value)
+    }
+
+    if (isDingTalkContainer() && dingtalkCorpId.value) {
+      const code = await requestDingTalkAuthCode(dingtalkCorpId.value)
+      const response = await exchangeDingTalkCode({
+        code,
+        source: 'inner',
+        // 后端已在本次请求内完成入空间，因此这里不需要 App.vue 的兑换路径。
+        invite_token: inviteToken.value || undefined,
+      })
+      if (!response.success || !response.token) {
+        throw new Error(response.message || t('auth.dingtalkLoginFailed'))
+      }
+      sessionStorage.removeItem('weknora_pending_invite_token')
+      await persistLoginResponse(response)
+      notifyLoginSuccess(response, t, tm, formatRole, roleIcon)
+      return
+    }
+
+    window.location.href = dingTalkLoginURL()
+  } catch (error: any) {
+    console.error('钉钉登录失败:', error)
+    if (!silent) MessagePlugin.error(error?.message || t('auth.dingtalkLoginFailed'))
+  } finally {
+    dingtalkLoading.value = false
   }
 }
 
@@ -758,13 +835,13 @@ onMounted(async () => {
         inviteLookup.value = resp.data
       } else {
         inviteLookupError.value = resp.message || t('inviteRegister.invalidBody')
-        loadOIDCConfig()
+        loadLoginProviders()
         loadAuthConfig()
         return
       }
     } catch {
       inviteLookupError.value = t('inviteRegister.invalidBody')
-      loadOIDCConfig()
+      loadLoginProviders()
       loadAuthConfig()
       return
     } finally {
@@ -780,7 +857,7 @@ onMounted(async () => {
     // 3. Only enabled registration modes may create an invited account.
     await loadAuthConfig()
     isRegisterMode.value = registrationEnabled.value
-    loadOIDCConfig()
+    loadLoginProviders()
     return
   }
 
@@ -801,8 +878,12 @@ onMounted(async () => {
     // Auto-setup may be unavailable outside the native Lite shell.
   }
 
-  loadOIDCConfig()
+  await loadLoginProviders()
   loadAuthConfig()
+  // 容器内静默免登；SDK 不可用时保持按钮，不打断页面。
+  if (isDingTalkContainer() && dingtalkEnabled.value) {
+    await handleDingTalkLogin(true)
+  }
 })
 </script>
 
@@ -1534,6 +1615,11 @@ onMounted(async () => {
     top: 50%;
     border-top: 1px solid var(--td-component-stroke);
   }
+}
+
+.dingtalk-button {
+  width: 100%;
+  margin-bottom: 4px;
 }
 
 .oidc-button {
