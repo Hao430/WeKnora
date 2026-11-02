@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/Tencent/WeKnora/internal/types"
@@ -65,34 +64,6 @@ func (r *userIdentityRepository) Create(ctx context.Context, identity *types.Use
 		return err
 	}
 	return nil
-}
-
-// CreateUserWithIdentity inserts the account and its binding in one
-// transaction. A failed binding insert rolls the account back, so a retried
-// login can never hit a user whose identity row is missing.
-func (r *userIdentityRepository) CreateUserWithIdentity(
-	ctx context.Context, user *types.User, identity *types.UserIdentity,
-) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// Same rule as userRepository.CreateUser: serialising the zero
-		// tenant as 0 would violate the PostgreSQL FK for a tenantless
-		// (invite-driven) account. See internal/application/repository/user.go.
-		insert := tx
-		if user.TenantID == 0 {
-			insert = insert.Omit("tenant_id")
-		}
-		if err := insert.Create(user).Error; err != nil {
-			return fmt.Errorf("create user: %w", err)
-		}
-		identity.UserID = user.ID
-		if err := tx.Create(identity).Error; err != nil {
-			if isDuplicateIdentity(err) {
-				return ErrIdentityAlreadyBound
-			}
-			return fmt.Errorf("create identity: %w", err)
-		}
-		return nil
-	})
 }
 
 // isDuplicateIdentity recognises the uniq_user_identity violation.
