@@ -145,6 +145,21 @@ func (s *dingTalkAuthService) Bind(ctx context.Context, userID string, in types.
 	if _, err := s.users.GetUserByID(ctx, userID); err != nil {
 		return fmt.Errorf("load user: %w", err)
 	}
+
+	// Binding the account that is already bound to this user is a no-op: the
+	// settings page offers the button without a status query, so clicking it
+	// twice (or after a second device) must not read as a conflict.
+	existing, err := s.identityRepo.GetBySubject(
+		ctx, types.IdentityProviderDingTalk, s.corpID, profile.UnionID)
+	switch {
+	case err == nil && existing.UserID == userID:
+		return nil
+	case err == nil:
+		return apprepo.ErrIdentityAlreadyBound
+	case !errors.Is(err, apprepo.ErrIdentityNotFound):
+		return fmt.Errorf("lookup dingtalk identity: %w", err)
+	}
+
 	return s.identityRepo.Create(ctx, &types.UserIdentity{
 		UserID:         userID,
 		Provider:       types.IdentityProviderDingTalk,

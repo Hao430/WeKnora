@@ -257,6 +257,33 @@ func TestDingTalkResolveRejectsIncompleteProfiles(t *testing.T) {
 	})
 }
 
+func TestDingTalkResolveRejectsLocallyDisabledAccount(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	h.users.seed(&types.User{ID: "blocked", IsActive: false})
+	require.NoError(t, h.identity.Create(ctx, &types.UserIdentity{
+		UserID: "blocked", Provider: types.IdentityProviderDingTalk, ProviderTenant: "corp-1", Subject: "union-1",
+	}))
+
+	_, err := h.login(t, config.AuthRegistrationModeSelfServe, "")
+	assert.ErrorIs(t, err, ErrDingTalkAccountDisabled)
+}
+
+// A link that dies between lookup and accept must not leave a home tenant the
+// user is not a member of: the next login with a valid link retries the join.
+func TestDingTalkResolveRestoresTenantlessWhenInviteAcceptFails(t *testing.T) {
+	h := newHarness(t)
+	h.invites.acceptErr = ErrInvitationTokenInvalid
+
+	_, err := h.login(t, config.AuthRegistrationModeInviteRegister, "invite-1")
+	assert.ErrorIs(t, err, ErrInvitationTokenInvalid)
+
+	created := h.users.users["user-13800000000"]
+	require.NotNil(t, created)
+	assert.Zero(t, created.TenantID, "failed invite must not leave a home tenant behind")
+	assert.Len(t, h.users.register, 1, "the account itself is kept so a valid link can heal it")
+}
+
 func TestDingTalkResolveReusesBoundIdentity(t *testing.T) {
 	h := newHarness(t)
 	first, err := h.login(t, config.AuthRegistrationModeSelfServe, "")
@@ -308,6 +335,9 @@ func TestDingTalkBindRejectsDuplicateIdentity(t *testing.T) {
 	h := newHarness(t)
 	ctx := context.Background()
 	h.users.seed(&types.User{ID: "me", IsActive: true})
+	require.NoError(t, h.svc.Bind(ctx, "me", types.DingTalkBindInput{Code: "c", Source: types.DingTalkSourceOAuth}))
+	// Re-binding the same account is idempotent: the settings page has no
+	// status query, so a second click must not surface a conflict.
 	require.NoError(t, h.svc.Bind(ctx, "me", types.DingTalkBindInput{Code: "c", Source: types.DingTalkSourceOAuth}))
 
 	require.NoError(t, h.identity.Create(ctx, &types.UserIdentity{
