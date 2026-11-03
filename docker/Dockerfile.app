@@ -7,12 +7,12 @@ ARG APK_MIRROR_ARG
 # Debian source before swapping in a mirror: mirrors.tencent.com redirects
 # apt to HTTPS, and that handshake fails without a trust store.
 RUN if [ -n "$APK_MIRROR_ARG" ]; then \
-        apt-get update && \
+        apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 && \
         apt-get install -y --no-install-recommends ca-certificates && \
         rm -rf /var/lib/apt/lists/* && \
         sed -i "s@deb.debian.org@${APK_MIRROR_ARG}@g" /etc/apt/sources.list.d/debian.sources; \
     fi && \
-    apt-get update && \
+    apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 && \
     apt-get install -y --no-install-recommends git python3 ca-certificates curl build-essential cmake pkg-config && \
     rm -rf /var/lib/apt/lists/*
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo
@@ -43,7 +43,7 @@ ENV GOSUMDB=${GOSUMDB_ARG}
 RUN if [ -n "$APK_MIRROR_ARG" ]; then \
         sed -i "s@deb.debian.org@${APK_MIRROR_ARG}@g" /etc/apt/sources.list.d/debian.sources; \
     fi && \
-    apt-get update && \
+    apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 && \
     apt-get install -y git build-essential libsqlite3-dev curl
 
 # Install migrate tool
@@ -117,7 +117,7 @@ COPY --from=browserskill /opt/weknora/browserskill /opt/weknora/browserskill
 RUN useradd -m -s /bin/bash appuser
 
 # First, install ca-certificates without mirror to ensure HTTPS works
-RUN apt-get update && \
+RUN apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 && \
     apt-get install -y --no-install-recommends ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
@@ -125,7 +125,7 @@ RUN apt-get update && \
 RUN if [ -n "$APK_MIRROR_ARG" ]; then \
         sed -i "s@deb.debian.org@${APK_MIRROR_ARG}@g" /etc/apt/sources.list.d/debian.sources; \
     fi && \
-    apt-get update && \
+    apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 && \
     apt-get install -y --no-install-recommends \
         build-essential postgresql-client default-mysql-client tzdata sed curl bash vim wget \
         libsqlite3-0 \

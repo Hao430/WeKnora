@@ -12,7 +12,7 @@ RUN if [ -n "$APT_MIRROR" ]; then \
 WORKDIR /app
 
 # 安装构建依赖
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 && apt-get install -y \
     gcc \
     python3-dev \
     libjpeg-dev \
@@ -94,7 +94,7 @@ RUN if [ -n "$APT_MIRROR" ]; then \
 WORKDIR /app
 
 # 安装运行时依赖（已移除 OCR/PaddleOCR 相关依赖）
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 && apt-get install -y \
     libjpeg62-turbo \
     wget \
     gnupg \
