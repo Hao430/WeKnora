@@ -21253,6 +21253,11 @@ const docTemplate = `{
         },
         "/system/admin/runtime/documents": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "SystemAdmin metadata view with separate current attempts and historical failures. No raw payloads.",
                 "produces": [
                     "application/json"
@@ -21339,16 +21344,16 @@ const docTemplate = `{
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ]
+                }
             }
         },
         "/system/admin/runtime/documents/wiki-start": {
             "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Schedules up to 100 eligible documents, oldest first, under existing worker claims and limits.\nIngestion and failure history are retained. Partial handoff errors include accepted counts.",
                 "consumes": [
                     "application/json"
@@ -21417,16 +21422,16 @@ const docTemplate = `{
                             ]
                         }
                     }
-                },
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ]
+                }
             }
         },
         "/system/admin/runtime/documents/{knowledge_id}": {
             "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
                 "description": "Returns up to 50 original failures with bounded error previews. Excludes bodies and task payloads.",
                 "produces": [
                     "application/json"
@@ -21472,12 +21477,7 @@ const docTemplate = `{
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ]
+                }
             }
         },
         "/system/admin/runtime/queues": {
@@ -24986,75 +24986,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_Tencent_WeKnora_internal_types.MemorySubjectSummary": {
-            "type": "object",
-            "properties": {
-                "active_count": {
-                    "type": "integer"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "item_count": {
-                    "type": "integer"
-                },
-                "last_activity_at": {
-                    "type": "string"
-                },
-                "pending_count": {
-                    "type": "integer"
-                },
-                "principal_type": {
-                    "type": "string"
-                },
-                "subject_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handler.AdminMemorySettingsRequest": {
-            "type": "object",
-            "required": [
-                "enabled"
-            ],
-            "properties": {
-                "enabled": {
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
-        "internal_handler.ListMemorySubjectsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_types.MemorySubjectSummary"
-                    }
-                },
-                "success": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "internal_handler.MemoryAdminErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {},
-                "success": {
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
         "github_com_Tencent_WeKnora_internal_agent_tools.AgentToolCatalog": {
             "type": "object",
             "properties": {
@@ -27478,6 +27409,12 @@ const docTemplate = `{
         "github_com_Tencent_WeKnora_internal_types.AuditAction": {
             "type": "string",
             "enum": [
+                "memory.subjects_listed",
+                "memory.subject_inspected",
+                "memory.item_confirmed",
+                "memory.item_rejected",
+                "memory.subject_cleared",
+                "memory.subject_settings_updated",
                 "rbac.member_added",
                 "rbac.member_removed",
                 "rbac.member_role_changed",
@@ -27542,6 +27479,12 @@ const docTemplate = `{
                 "faq.import_failed"
             ],
             "x-enum-varnames": [
+                "AuditActionMemorySubjectsListed",
+                "AuditActionMemorySubjectInspected",
+                "AuditActionMemoryItemConfirmed",
+                "AuditActionMemoryItemRejected",
+                "AuditActionMemorySubjectCleared",
+                "AuditActionMemorySubjectSettingsUpdated",
                 "AuditActionMemberAdded",
                 "AuditActionMemberRemoved",
                 "AuditActionMemberRoleChanged",
@@ -32623,7 +32566,7 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "max_items": {
-                    "description": "MaxItems caps active items per subject. 0 means DefaultMemoryMaxItems.",
+                    "description": "MaxItems 分别限制每个主体的 active 和 pending 条数；0 使用默认值。",
                     "type": "integer"
                 },
                 "retrieval_conditioning": {
@@ -32785,6 +32728,35 @@ const docTemplate = `{
                 },
                 "write_mode": {
                     "description": "WriteMode is the workspace write mode.",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Tencent_WeKnora_internal_types.MemorySubjectSummary": {
+            "type": "object",
+            "properties": {
+                "active_count": {
+                    "type": "integer"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "item_count": {
+                    "type": "integer"
+                },
+                "last_activity_at": {
+                    "type": "string"
+                },
+                "pending_count": {
+                    "type": "integer"
+                },
+                "principal_type": {
+                    "type": "string"
+                },
+                "subject_id": {
                     "type": "string"
                 }
             }
@@ -38680,6 +38652,18 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_handler.AdminMemorySettingsRequest": {
+            "type": "object",
+            "required": [
+                "enabled"
+            ],
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
         "internal_handler.AgentChunkDetail": {
             "type": "object",
             "properties": {
@@ -40622,6 +40606,24 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_handler.ListMemorySubjectsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_Tencent_WeKnora_internal_types.MemorySubjectSummary"
+                    }
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "internal_handler.ListOrganizationSharedAgentsResponse": {
             "type": "object",
             "properties": {
@@ -40883,6 +40885,16 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "internal_handler.MemoryAdminErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {},
+                "success": {
+                    "type": "boolean",
+                    "example": false
                 }
             }
         },
