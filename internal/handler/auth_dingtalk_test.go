@@ -17,6 +17,8 @@ import (
 	"github.com/Tencent/WeKnora/internal/types/interfaces"
 	secutils "github.com/Tencent/WeKnora/internal/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type stubDingTalkAuth struct {
@@ -182,6 +184,33 @@ func TestDingTalkCallbackHandsCodeBackToSPA(t *testing.T) {
 	if got := w.Header().Get("Location"); got != "/#dingtalk_code=code-1" {
 		t.Fatalf("location = %q", got)
 	}
+}
+
+// A sub-path deploy (FRONTEND_BASE_URL set) must keep both the callback URL
+// and the post-callback redirect under that prefix — otherwise the browser
+// lands on the site root, which serves no SPA and drops the code.
+func TestDingTalkHonoursFrontendBasePath(t *testing.T) {
+	cfg := &config.Config{
+		FrontendBaseURL: "https://kg.example.com/app",
+		Auth:            &config.AuthConfig{RegistrationMode: config.AuthRegistrationModeInviteRegister},
+		DingTalkAuth:    &config.DingTalkAuthConfig{Enable: true, CorpID: "corp-1", ClientID: "client-1"},
+	}
+	h := NewAuthHandler(cfg, &stubDingTalkUserService{}, nil, nil, nil).SetDingTalkAuth(&stubDingTalkAuth{})
+	r := newDingTalkTestRouter(h)
+
+	startRec := httptest.NewRecorder()
+	r.ServeHTTP(startRec, httptest.NewRequest(http.MethodGet, "/auth/dingtalk/start", nil))
+	location, err := url.Parse(startRec.Header().Get("Location"))
+	require.NoError(t, err)
+	assert.Equal(t, "https://kg.example.com/app/api/v1/auth/dingtalk/callback",
+		location.Query().Get("redirect_uri"))
+
+	state, cookie := signedDingTalkState(t)
+	req := httptest.NewRequest(http.MethodGet, "/auth/dingtalk/callback?code=code-1&state="+url.QueryEscape(state), nil)
+	req.AddCookie(cookie)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	assert.Equal(t, "https://kg.example.com/app/#dingtalk_code=code-1", w.Header().Get("Location"))
 }
 
 func TestDingTalkCallbackRejectsTamperedState(t *testing.T) {

@@ -119,7 +119,7 @@ func (h *AuthHandler) DingTalkStart(c *gin.Context) {
 
 	authURL := buildDingTalkAuthorizationURL(
 		strings.TrimSpace(h.dingTalkConfig().ClientID),
-		dingTalkCallbackURL(c),
+		dingTalkCallbackURL(c, h.configInfo),
 		state,
 	)
 	if strings.EqualFold(strings.TrimSpace(c.Query("mode")), "bind") {
@@ -156,30 +156,30 @@ func (h *AuthHandler) DingTalkCallback(c *gin.Context) {
 // bind target in the signed state, both of which are already in the SPA.
 func (h *AuthHandler) dingTalkRedirectCallback(c *gin.Context) {
 	if providerErr := strings.TrimSpace(c.Query("error")); providerErr != "" {
-		c.Redirect(http.StatusFound, "/"+dingTalkErrFragment+urlQueryEscape(providerErr))
+		h.dingTalkFrontendRedirect(c, dingTalkErrFragment+urlQueryEscape(providerErr))
 		return
 	}
 
 	payload, err := secutils.VerifyOIDCState(strings.TrimSpace(c.Query("state")))
 	if err != nil {
 		logger.Errorf(c.Request.Context(), "Failed to verify DingTalk state: %v", err)
-		c.Redirect(http.StatusFound, "/"+dingTalkErrFragment+urlQueryEscape("invalid_state"))
+		h.dingTalkFrontendRedirect(c, dingTalkErrFragment+urlQueryEscape("invalid_state"))
 		return
 	}
 	cookie, cookieErr := c.Request.Cookie(dingTalkNonceCookieName)
 	// One-time use: clear the binding cookie as soon as it is checked.
 	clearDingTalkNonceCookie(c)
 	if cookieErr != nil || cookie.Value == "" || cookie.Value != payload.Nonce {
-		c.Redirect(http.StatusFound, "/"+dingTalkErrFragment+urlQueryEscape("invalid_state"))
+		h.dingTalkFrontendRedirect(c, dingTalkErrFragment+urlQueryEscape("invalid_state"))
 		return
 	}
 
 	code := strings.TrimSpace(c.Query("code"))
 	if code == "" {
-		c.Redirect(http.StatusFound, "/"+dingTalkErrFragment+urlQueryEscape("missing_code"))
+		h.dingTalkFrontendRedirect(c, dingTalkErrFragment+urlQueryEscape("missing_code"))
 		return
 	}
-	c.Redirect(http.StatusFound, "/"+dingTalkCodeFragment+urlQueryEscape(code))
+	h.dingTalkFrontendRedirect(c, dingTalkCodeFragment+urlQueryEscape(code))
 }
 
 func (h *AuthHandler) dingTalkExchange(c *gin.Context) {
@@ -320,15 +320,25 @@ func buildDingTalkAuthorizationURL(clientID, redirectURI, state string) string {
 	return dingTalkAuthorizeEndpoint + "?" + query.Encode()
 }
 
-// dingTalkCallbackURL derives the absolute callback URL from the request's own
-// origin so the redirect_uri always matches the console configuration for this
-// deployment.
-func dingTalkCallbackURL(c *gin.Context) string {
+// dingTalkCallbackURL derives the absolute callback URL so the redirect_uri
+// always matches what the DingTalk console holds for this deployment. A sub-path
+// deploy (FRONTEND_BASE_URL set, same rule the OIDC callback follows) keeps the
+// API under that prefix; otherwise fall back to the request's own origin.
+func dingTalkCallbackURL(c *gin.Context, cfg *config.Config) string {
+	if base := frontendBaseURLFor(cfg); base != "" {
+		return base + "/api/v1/auth/dingtalk/callback"
+	}
 	scheme := "http"
 	if c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https") {
 		scheme = "https"
 	}
 	return scheme + "://" + c.Request.Host + "/api/v1/auth/dingtalk/callback"
+}
+
+// dingTalkFrontendRedirect sends the browser back to the SPA, honouring the
+// configured frontend base path (same reason oidcCallbackURL takes cfg).
+func (h *AuthHandler) dingTalkFrontendRedirect(c *gin.Context, fragment string) {
+	c.Redirect(http.StatusFound, frontendBaseURLFor(h.configInfo)+"/"+fragment)
 }
 
 func setDingTalkNonceCookie(c *gin.Context, nonce string) {
