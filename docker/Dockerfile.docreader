@@ -66,10 +66,16 @@ RUN if [ -z "$TARGETARCH" ]; then \
 # 复制依赖文件
 COPY docreader/pyproject.toml docreader/uv.lock ./
 # 国内直连 PyPI 只有几十 kB/s，uv.lock 里几百 MB 的依赖装不完。
-# PIP_INDEX_URL 为空时展开成空串，行为与上游完全一致。
+# 配了镜像就用 --frozen：uv.lock 记录的是 pypi.org，换 index 后 --locked 会
+# 判定 lock 过期（"needs to be updated"）；--frozen 跳过该校验，仍按 lock 的
+# 版本安装，只是下载地址换成镜像。没配镜像时保持上游的 --locked。
 ARG PIP_INDEX_URL=""
 RUN pip install ${PIP_INDEX_URL:+--index-url ${PIP_INDEX_URL}} uv --break-system-packages && \
-    python -m uv sync --locked --no-dev ${PIP_INDEX_URL:+--default-index ${PIP_INDEX_URL}}
+    if [ -n "${PIP_INDEX_URL}" ]; then \
+        python -m uv sync --no-dev --default-index "${PIP_INDEX_URL}" --frozen; \
+    else \
+        python -m uv sync --locked --no-dev; \
+    fi
 
 # 复制源代码和生成脚本
 COPY docreader docreader
