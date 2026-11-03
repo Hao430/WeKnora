@@ -65,8 +65,11 @@ RUN if [ -z "$TARGETARCH" ]; then \
 
 # 复制依赖文件
 COPY docreader/pyproject.toml docreader/uv.lock ./
-RUN pip install uv --break-system-packages && \
-    python -m uv sync --locked --no-dev
+# 国内直连 PyPI 只有几十 kB/s，uv.lock 里几百 MB 的依赖装不完。
+# PIP_INDEX_URL 为空时展开成空串，行为与上游完全一致。
+ARG PIP_INDEX_URL=""
+RUN pip install ${PIP_INDEX_URL:+--index-url ${PIP_INDEX_URL}} uv --break-system-packages && \
+    python -m uv sync --locked --no-dev ${PIP_INDEX_URL:+--default-index ${PIP_INDEX_URL}}
 
 # 复制源代码和生成脚本
 COPY docreader docreader
