@@ -6794,6 +6794,7 @@ export default {
     loginHint: '로그인하여 계속하세요. 처음이시라면 아래에서 계정을 만드세요.',
     loginHintDingTalk: '딩톡 계정으로 로그인합니다. 처음 로그인하면 계정이 자동으로 생성됩니다.',
     useEmailPasswordLogin: '이메일과 비밀번호로 로그인',
+    hideEmailLogin: '이메일 로그인 접기',
     registerWithEmail: '이메일로 새 계정 만들기',
     firstTime: 'WeKnora가 처음이신가요?',
     registerSuccess: '가입이 완료되었습니다. 로그인해주세요',

@@ -3122,6 +3122,7 @@ export default {
     loginHint: 'ログインして続行してください。初めての方は下からアカウントを作成できます。',
     loginHintDingTalk: 'DingTalk アカウントでログインします。初回ログイン時にアカウントが自動作成されます。',
     useEmailPasswordLogin: 'メールアドレスとパスワードでログイン',
+    hideEmailLogin: 'メールアドレスでのログインを閉じる',
     registerWithEmail: 'メールアドレスで新規アカウントを作成',
     firstTime: 'WeKnoraは初めてですか？',
     registerSuccess: '登録が完了しました。ログインしてください',

@@ -3122,6 +3122,7 @@ export default {
     loginHint: 'Sign in to continue, or create an account below if this is your first time.',
     loginHintDingTalk: 'Sign in with DingTalk; your first login creates the account automatically.',
     useEmailPasswordLogin: 'Sign in with email and password',
+    hideEmailLogin: 'Hide email sign-in',
     registerWithEmail: 'Create an account with email',
     firstTime: 'New to WeKnora?',
     registerSuccess: 'Registration successful. Please sign in',

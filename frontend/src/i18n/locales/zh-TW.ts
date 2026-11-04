@@ -6795,6 +6795,7 @@ export default {
     loginHint: '登入以繼續使用；首次使用請在下方建立帳戶。',
     loginHintDingTalk: '使用釘釘帳號登入；首次使用會自動開通帳號。',
     useEmailPasswordLogin: '使用郵箱密碼登入',
+    hideEmailLogin: '收起郵箱登入',
     registerWithEmail: '用郵箱註冊新帳號',
     firstTime: '首次使用 WeKnora？',
     registerSuccess: '註冊成功，請登入',

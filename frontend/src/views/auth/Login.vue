@@ -220,6 +220,13 @@
               </t-button>
             </t-form>
 
+            <!-- 展开后留一个收起入口，误点不必刷新页面。 -->
+            <div v-if="dingtalkEnabled && emailLoginOpen" class="email-login-entry">
+              <button type="button" class="email-login-entry__link" :disabled="loading" @click="emailLoginOpen = false">
+                {{ $t('auth.hideEmailLogin') }}
+              </button>
+            </div>
+
             <!-- 邮箱注册是备选路径，收成一行小字。 -->
             <div class="register-cta" v-if="registrationEnabled">
               <button type="button" class="register-cta__link" :disabled="loading" @click="toggleMode">

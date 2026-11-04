@@ -6794,6 +6794,7 @@ export default {
     loginHint: 'Войдите, чтобы продолжить, или создайте аккаунт ниже, если вы впервые здесь.',
     loginHintDingTalk: 'Вход через DingTalk: при первом входе аккаунт создаётся автоматически.',
     useEmailPasswordLogin: 'Войти по email и паролю',
+    hideEmailLogin: 'Свернуть вход по email',
     registerWithEmail: 'Создать аккаунт по email',
     firstTime: 'Впервые в WeKnora?',
     registerSuccess: 'Регистрация завершена. Войдите в систему',

@@ -6795,6 +6795,7 @@ export default {
     loginHint: '登录以继续使用；首次使用请在下方创建账户。',
     loginHintDingTalk: '使用钉钉账号登录；首次使用会自动开通账号。',
     useEmailPasswordLogin: '使用邮箱密码登录',
+    hideEmailLogin: '收起邮箱登录',
     registerWithEmail: '用邮箱注册新账号',
     firstTime: '首次使用 WeKnora？',
     registerSuccess: '注册成功，请登录',
