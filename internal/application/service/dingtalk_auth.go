@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	apprepo "github.com/Tencent/WeKnora/internal/application/repository"
 	"github.com/Tencent/WeKnora/internal/config"
@@ -195,7 +196,7 @@ func (s *dingTalkAuthService) resolveUser(
 		if !user.IsActive {
 			return nil, false, ErrDingTalkAccountDisabled
 		}
-		return user, false, nil
+		return s.syncUsername(ctx, user, profile), false, nil
 	case errors.Is(err, apprepo.ErrIdentityNotFound):
 		return s.provision(ctx, profile, in, inviteToken)
 	default:
@@ -232,7 +233,7 @@ func (s *dingTalkAuthService) provision(
 		return nil, false, ErrDingTalkEmailTaken
 	}
 
-	username, err := s.availableUsername(ctx, mobile)
+	username, err := s.availableUsername(ctx, dingTalkUsernameSeed(profile), "")
 	if err != nil {
 		return nil, false, err
 	}
@@ -336,16 +337,19 @@ func (s *dingTalkAuthService) boundUser(ctx context.Context, unionID string) (*t
 	return user, true
 }
 
-// availableUsername derives a free username from the mobile number so the
-// account list stays readable, falling back to a numeric suffix on collision.
-func (s *dingTalkAuthService) availableUsername(ctx context.Context, mobile string) (string, error) {
-	base := sanitizeUsernameCandidate(mobile)
+// availableUsername turns a readable seed into a free username, falling back
+// to a numeric suffix on collision. exceptUserID is excluded from the check so
+// a returning account does not collide with itself while syncing its name.
+func (s *dingTalkAuthService) availableUsername(ctx context.Context, base, exceptUserID string) (string, error) {
 	for i := 0; i < 20; i++ {
 		candidate := base
 		if i > 0 {
 			candidate = fmt.Sprintf("%s-%d", base, i)
 		}
 		existing, err := s.users.GetUserByUsername(ctx, candidate)
+		if err == nil && existing != nil && existing.ID == exceptUserID {
+			return candidate, nil
+		}
 		switch {
 		case err != nil && isUserLookupNotFound(err), err == nil && existing == nil:
 			return candidate, nil
@@ -354,10 +358,76 @@ func (s *dingTalkAuthService) availableUsername(ctx context.Context, mobile stri
 		}
 	}
 	// Deliberately not time-based: a second collision after 20 attempts means
-	// the mobile number is in heavy use, and a random suffix keeps us moving.
+	// the display name is in heavy use, and a random suffix keeps us moving.
 	suffix, err := generateRandomString(6)
 	if err != nil {
 		return "", fmt.Errorf("generate username suffix: %w", err)
 	}
-	return sanitizeUsernameCandidate(base + "-" + suffix), nil
+	return base + "-" + suffix, nil
+}
+
+// dingTalkUsernameSeed is the readable base of a provisioned username: the
+// DingTalk display name, or the mobile number when the provider returns none.
+// The placeholder email keeps deriving from the mobile number either way.
+func dingTalkUsernameSeed(profile *dingtalk.Profile) string {
+	if name := sanitizeDingTalkUsername(profile.Nick); name != "" {
+		return name
+	}
+	return sanitizeUsernameCandidate(profile.Mobile)
+}
+
+// syncUsername keeps a returning account aligned with the DingTalk display
+// name, so accounts provisioned before the name became the username (and
+// accounts renamed in DingTalk) pick the new name up on their next login.
+// Failing to rename never blocks the login itself.
+func (s *dingTalkAuthService) syncUsername(
+	ctx context.Context, user *types.User, profile *dingtalk.Profile,
+) *types.User {
+	name := sanitizeDingTalkUsername(profile.Nick)
+	if name == "" {
+		return user
+	}
+	candidate, err := s.availableUsername(ctx, name, user.ID)
+	if err != nil {
+		logger.Warnf(ctx, "dingtalk: resolve username for user %s: %v", user.ID, err)
+		return user
+	}
+	if candidate == user.Username {
+		return user
+	}
+	previous := user.Username
+	user.Username = candidate
+	if err := s.users.UpdateUser(ctx, user); err != nil {
+		user.Username = previous
+		logger.Warnf(ctx, "dingtalk: rename user %s to %q: %v", user.ID, candidate, err)
+	}
+	return user
+}
+
+// sanitizeDingTalkUsername keeps letters, digits, '_', '.' and '-' — Chinese
+// names included, since that is what the DingTalk display name usually is.
+// Every other run of characters collapses into a single dash.
+func sanitizeDingTalkUsername(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return ""
+	}
+	var b strings.Builder
+	lastDash := false
+	for _, r := range value {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '.' {
+			b.WriteRune(r)
+			lastDash = false
+			continue
+		}
+		if !lastDash {
+			b.WriteByte('-')
+			lastDash = true
+		}
+	}
+	result := strings.Trim(b.String(), "-._")
+	if runes := []rune(result); len(runes) > 50 {
+		result = strings.Trim(string(runes[:50]), "-._")
+	}
+	return result
 }

@@ -186,7 +186,7 @@ func TestDingTalkResolveProvisionsSelfServeAccount(t *testing.T) {
 	assert.Equal(t, "access", result.AccessToken)
 	require.Len(t, h.users.register, 1)
 	assert.Equal(t, "13800000000@jgjl.cn", h.users.register[0].Email)
-	assert.Equal(t, "13800000000", h.users.register[0].Username, "the mobile number is the readable username")
+	assert.Equal(t, "张三", h.users.register[0].Username, "the dingtalk display name is the readable username")
 	assert.Empty(t, h.users.register[0].TenantProvisioning, "self-serve keeps Register's default tenant mode")
 
 	identity, err := h.identity.GetBySubject(context.Background(), types.IdentityProviderDingTalk, "corp-1", "union-1")
@@ -280,7 +280,7 @@ func TestDingTalkResolveRestoresTenantlessWhenInviteAcceptFails(t *testing.T) {
 	_, err := h.login(t, config.AuthRegistrationModeInviteRegister, "invite-1")
 	assert.ErrorIs(t, err, ErrInvitationTokenInvalid)
 
-	created := h.users.users["user-13800000000"]
+	created := h.users.users["user-张三"]
 	require.NotNil(t, created)
 	assert.Zero(t, created.TenantID, "failed invite must not leave a home tenant behind")
 	assert.Len(t, h.users.register, 1, "the account itself is kept so a valid link can heal it")
@@ -366,4 +366,79 @@ func (r *racingIdentityRepo) GetBySubject(
 		return nil, apprepo.ErrIdentityNotFound
 	}
 	return r.UserIdentityRepository.GetBySubject(ctx, provider, providerTenant, subject)
+}
+
+func TestDingTalkUsernameFollowsDisplayName(t *testing.T) {
+	tests := []struct {
+		name   string
+		nick   string
+		mobile string
+		want   string
+	}{
+		{"chinese name", "张三", "13800000000", "张三"},
+		{"latin name", "Zhang San", "13800000000", "Zhang-San"},
+		{"punctuation collapses", "  李  四（研发） ", "13800000000", "李-四-研发"},
+		{"missing nick falls back to mobile", "", "13800000000", "13800000000"},
+		{"blank nick falls back to mobile", "   ", "13800000000", "13800000000"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHarness(t)
+			h.client.profile = &dingtalk.Profile{UnionID: "union-1", Nick: tt.nick, Mobile: tt.mobile}
+			_, err := h.login(t, config.AuthRegistrationModeSelfServe, "")
+			require.NoError(t, err)
+			require.Len(t, h.users.register, 1)
+			assert.Equal(t, tt.want, h.users.register[0].Username)
+			assert.Equal(t, tt.mobile+"@jgjl.cn", h.users.register[0].Email,
+				"the placeholder email keeps deriving from the mobile number")
+		})
+	}
+}
+
+func TestDingTalkUsernameSuffixesOnCollision(t *testing.T) {
+	h := newHarness(t)
+	h.users.seed(&types.User{ID: "first", Username: "张三", IsActive: true})
+
+	_, err := h.login(t, config.AuthRegistrationModeSelfServe, "")
+	require.NoError(t, err)
+	require.Len(t, h.users.register, 1)
+	assert.Equal(t, "张三-1", h.users.register[0].Username)
+}
+
+// Accounts provisioned while the mobile number was the username are renamed on
+// their next login; repeated logins are stable and do not rename again.
+func TestDingTalkResolveRenamesExistingAccountOnLogin(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	h.users.seed(&types.User{ID: "old", Username: "13800000000", Email: "13800000000@jgjl.cn", IsActive: true})
+	require.NoError(t, h.identity.Create(ctx, &types.UserIdentity{
+		UserID: "old", Provider: types.IdentityProviderDingTalk, ProviderTenant: "corp-1", Subject: "union-1",
+	}))
+
+	result, err := h.login(t, config.AuthRegistrationModeSelfServe, "")
+	require.NoError(t, err)
+	assert.Equal(t, "old", result.User.ID)
+	assert.Equal(t, "张三", result.User.Username)
+	assert.Len(t, h.users.updated, 1, "the rename is persisted once")
+
+	_, err = h.login(t, config.AuthRegistrationModeSelfServe, "")
+	require.NoError(t, err)
+	assert.Len(t, h.users.updated, 1, "an already-synced name is not renamed again")
+}
+
+// A user who already holds the suffixed name must keep it instead of chasing
+// the name another account took first.
+func TestDingTalkUsernameKeepsExistingSuffix(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	h.users.seed(&types.User{ID: "other", Username: "张三", IsActive: true})
+	h.users.seed(&types.User{ID: "me", Username: "张三-1", Email: "13800000000@jgjl.cn", IsActive: true})
+	require.NoError(t, h.identity.Create(ctx, &types.UserIdentity{
+		UserID: "me", Provider: types.IdentityProviderDingTalk, ProviderTenant: "corp-1", Subject: "union-1",
+	}))
+
+	result, err := h.login(t, config.AuthRegistrationModeSelfServe, "")
+	require.NoError(t, err)
+	assert.Equal(t, "张三-1", result.User.Username)
+	assert.Empty(t, h.users.updated, "a stable name needs no write")
 }
