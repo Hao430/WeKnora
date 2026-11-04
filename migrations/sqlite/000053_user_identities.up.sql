@@ -1,4 +1,4 @@
--- Third-party login identities (mirror of versioned 000136).
+-- Third-party login identities (mirror of versioned 000137).
 CREATE TABLE IF NOT EXISTS user_identities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
