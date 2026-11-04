@@ -270,6 +270,16 @@
           </div>
 
           <div class="form-content">
+            <!-- 邀请链接落地即注册卡片，钉钉入口必须同样可见，否则只能先退回登录页。 -->
+            <template v-if="dingtalkEnabled">
+              <t-button theme="primary" size="large" block :loading="dingtalkLoading" :disabled="loading"
+                class="dingtalk-button" @click="handleDingTalkLogin()">
+                {{ dingtalkLoading ? $t('auth.redirectingToDingTalk') : dingtalkLoginText }}
+              </t-button>
+              <div class="oidc-divider">
+                <span>{{ $t('auth.orContinueWith') }}</span>
+              </div>
+            </template>
             <t-form ref="registerFormRef" :data="registerData" :rules="registerRules" @submit="handleRegister"
               layout="vertical" label-align="top">
               <t-form-item :label="$t('auth.username')" name="username">
