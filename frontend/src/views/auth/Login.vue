@@ -176,7 +176,7 @@
           <div class="form-header">
             <h2 class="form-title">{{ $t('auth.login') }}</h2>
             <p class="form-welcome">{{ $t('auth.subtitle') }}</p>
-            <p v-if="registrationEnabled" class="form-hint">{{ $t('auth.loginHint') }}</p>
+            <p v-if="registrationEnabled" class="form-hint">{{ loginHintText }}</p>
           </div>
 
           <div class="form-content">
@@ -184,14 +184,25 @@
             <template v-if="dingtalkEnabled">
               <t-button theme="primary" size="large" block :loading="dingtalkLoading" :disabled="loading"
                 class="dingtalk-button" @click="handleDingTalkLogin()">
+                <template #icon>
+                  <img :src="dingtalkIcon" alt="" class="dingtalk-button__icon" />
+                </template>
                 {{ dingtalkLoading ? $t('auth.redirectingToDingTalk') : dingtalkLoginText }}
               </t-button>
               <div class="oidc-divider">
                 <span>{{ $t('auth.orContinueWith') }}</span>
               </div>
             </template>
-            <t-form ref="formRef" :data="formData" :rules="formRules" @submit="handleLogin" layout="vertical"
-              label-align="top">
+
+            <!-- 邮箱登录默认收起：钉钉是主路径，这里只服务存量本地账号。 -->
+            <div v-if="dingtalkEnabled && !emailLoginOpen" class="email-login-entry">
+              <button type="button" class="email-login-entry__link" :disabled="loading" @click="emailLoginOpen = true">
+                {{ $t('auth.useEmailPasswordLogin') }}
+              </button>
+            </div>
+
+            <t-form v-show="showEmailForm" ref="formRef" :data="formData" :rules="formRules" @submit="handleLogin"
+              layout="vertical" label-align="top">
               <t-form-item :label="$t('auth.email')" name="email">
                 <t-input v-model="formData.email" :placeholder="$t('auth.emailPlaceholder')" type="text"
                   autocomplete="email" size="large" :disabled="loading" />
@@ -202,29 +213,28 @@
                   autocomplete="current-password" size="large" :disabled="loading" @enter="handleLogin" />
               </t-form-item>
 
-              <t-button type="submit" theme="primary" size="large" block :loading="loading" class="submit-button">
+              <!-- 邮箱登录同样降级：钉钉是 primary，这里不再抢同一层级的按钮样式。 -->
+              <t-button type="submit" :theme="dingtalkEnabled ? 'default' : 'primary'" size="large" block :loading="loading"
+                class="submit-button">
                 {{ loading ? $t('auth.loggingIn') : $t('auth.login') }}
               </t-button>
-
-              <div class="register-cta" v-if="registrationEnabled">
-                <div class="register-cta__divider">
-                  <span>{{ $t('auth.firstTime') }}</span>
-                </div>
-                <t-button theme="default" variant="outline" size="large" block class="register-cta__button"
-                  :disabled="loading" @click="toggleMode">
-                  {{ $t('auth.createAccount') }}
-                </t-button>
-              </div>
-
-              <div v-if="oidcEnabled" class="oidc-divider">
-                <span>{{ $t('auth.orContinueWith') }}</span>
-              </div>
-
-              <t-button v-if="oidcEnabled" theme="default" size="large" block :loading="oidcLoading" :disabled="loading"
-                class="oidc-button" @click="handleOIDCLogin">
-                {{ oidcLoading ? $t('auth.redirectingToOIDC') : oidcLoginText }}
-              </t-button>
             </t-form>
+
+            <!-- 邮箱注册是备选路径，收成一行小字。 -->
+            <div class="register-cta" v-if="registrationEnabled">
+              <button type="button" class="register-cta__link" :disabled="loading" @click="toggleMode">
+                {{ $t('auth.registerWithEmail') }}
+              </button>
+            </div>
+
+            <div v-if="oidcEnabled" class="oidc-divider">
+              <span>{{ $t('auth.orContinueWith') }}</span>
+            </div>
+
+            <t-button v-if="oidcEnabled" theme="default" size="large" block :loading="oidcLoading" :disabled="loading"
+              class="oidc-button" @click="handleOIDCLogin">
+              {{ oidcLoading ? $t('auth.redirectingToOIDC') : oidcLoginText }}
+            </t-button>
 
             <!-- Features list -->
             <div class="login-features">
@@ -274,6 +284,9 @@
             <template v-if="dingtalkEnabled">
               <t-button theme="primary" size="large" block :loading="dingtalkLoading" :disabled="loading"
                 class="dingtalk-button" @click="handleDingTalkLogin()">
+                <template #icon>
+                  <img :src="dingtalkIcon" alt="" class="dingtalk-button__icon" />
+                </template>
                 {{ dingtalkLoading ? $t('auth.redirectingToDingTalk') : dingtalkLoginText }}
               </t-button>
               <div class="oidc-divider">
@@ -369,6 +382,7 @@ import { useI18n } from 'vue-i18n'
 import { getApiBaseUrl } from '@/utils/api-base'
 
 // Import screenshot images
+import dingtalkIcon from '@/assets/img/im/dingtalk.svg'
 import screenshot1 from '@/assets/img/screenshot-1.svg'
 import screenshot2 from '@/assets/img/screenshot-2.svg'
 import screenshot3 from '@/assets/img/screenshot-3.svg'
@@ -422,6 +436,8 @@ const dingtalkEnabled = ref(false)
 const dingtalkLoading = ref(false)
 const dingtalkProviderName = ref('')
 const dingtalkCorpId = ref('')
+// 钉钉是主入口，邮箱表单默认收起，只给存量本地账号留一条路径。
+const emailLoginOpen = ref(false)
 // Wait for configuration before showing a registration entry.
 const registrationMode = ref('')
 const registrationEnabled = computed(() => canRegister(registrationMode.value, !!inviteLookup.value))
@@ -458,6 +474,11 @@ const dingtalkLoginText = computed(() =>
   dingtalkProviderName.value
     ? t('auth.dingtalkLoginWith', { provider: dingtalkProviderName.value })
     : t('auth.dingtalkLogin')
+)
+// 没有钉钉入口的部署（上游默认形态）仍然直接显示邮箱表单。
+const showEmailForm = computed(() => !dingtalkEnabled.value || emailLoginOpen.value)
+const loginHintText = computed(() =>
+  dingtalkEnabled.value ? t('auth.loginHintDingTalk') : t('auth.loginHint')
 )
 const currentLangOption = computed(() => languageOptions.find(l => l.value === currentLanguage.value))
 
@@ -1482,50 +1503,36 @@ onMounted(async () => {
   font-family: var(--app-font-family);
 }
 
-/* 注册入口：从底部小字链接升级为带分隔线的醒目次级按钮，
-   让首次访客一眼就能找到「创建账户」。 */
+/* 钉钉是主入口，邮箱登录与邮箱注册都收成文字链接，避免与钉钉按钮抢权重。 */
+.email-login-entry {
+  text-align: center;
+  margin: 2px 0 12px;
+}
+
+.email-login-entry__link,
+.register-cta__link {
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  color: var(--td-brand-color);
+  font-size: var(--app-text-base);
+  font-family: var(--app-font-family);
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--td-brand-color-active);
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    color: var(--td-text-color-disabled);
+    cursor: not-allowed;
+  }
+}
+
 .register-cta {
-  margin-top: 8px;
-
-  &__divider {
-    position: relative;
-    text-align: center;
-    margin: 4px 0 14px;
-    color: var(--td-text-color-secondary);
-    font-size: var(--app-text-md);
-    font-family: var(--app-font-family);
-
-    span {
-      position: relative;
-      z-index: 1;
-      padding: 0 12px;
-      background: rgba(255, 255, 255, 0.97);
-    }
-
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 50%;
-      border-top: 1px solid var(--td-component-stroke);
-    }
-  }
-
-  &__button {
-    height: 46px;
-    border-radius: var(--app-radius-md);
-    font-size: var(--app-text-lg);
-    font-weight: 500;
-    border-color: var(--td-brand-color);
-    color: var(--td-brand-color);
-
-    &:hover {
-      border-color: var(--td-brand-color-active);
-      color: var(--td-brand-color-active);
-      background: var(--td-success-color-light);
-    }
-  }
+  margin-top: 6px;
+  text-align: center;
 }
 
 .form-subtitle {
@@ -1630,7 +1637,17 @@ onMounted(async () => {
 
 .dingtalk-button {
   width: 100%;
+  height: 46px;
+  border-radius: var(--app-radius-md);
+  font-size: var(--app-text-lg);
+  font-weight: 500;
   margin-bottom: 4px;
+
+  &__icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .oidc-button {
@@ -1943,10 +1960,6 @@ html[theme-mode="dark"] {
   .form-card {
     background: rgba(36, 36, 36, 0.97) !important;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  .register-cta__divider span {
-    background: rgba(36, 36, 36, 0.97);
   }
 
   .form-content .t-input {
