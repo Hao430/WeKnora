@@ -216,6 +216,7 @@ import type { SystemInfo } from '@/api/system'
 import { useEditorResourcesStore } from '@/stores/editorResources'
 import { useI18n } from 'vue-i18n'
 import { docsUrl } from '@/utils/docsUrl'
+import { FEEDBACK_FORM_URL } from '@/config/feedback'
 
 const { t, locale } = useI18n()
 
@@ -267,7 +268,7 @@ function formatUptime(totalSeconds: number): string {
 const troubleshootingDocsURL = docsUrl('troubleshootingMigrations')
 
 // 问题反馈：公司智能表单（原 GitHub issue 预填逻辑已移除）
-const reportIssueURL = 'https://doc.weixin.qq.com/smartsheet/form/1_wpqK5IDAAA7B-eHPTGIu6xYlH596mmCg_f6aab7'
+const reportIssueURL = FEEDBACK_FORM_URL
 
 // Methods
 const loadInfo = async () => {

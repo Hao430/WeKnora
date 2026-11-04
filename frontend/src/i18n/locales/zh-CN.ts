@@ -181,9 +181,9 @@ export default {
   automation: {
     conversationNotice: "此会话由自动化任务运行，不能手动发送消息。请在上方处理待审批事项。",
     title: '自动化',
-    description: '让 WeKnora 助手按计划以你的身份执行任务，结果和待审批事项会通知你。',
+    description: '让 智工按计划以你的身份执行任务，结果和待审批事项会通知你。',
     add: '新建自动化',
-    addHint: '也可以直接让 WeKnora 助手帮你创建',
+    addHint: '也可以直接让 智工帮你创建',
     paused: '已暂停',
     scheduleEnded: '已结束',
     scheduleEndedHint: '一次性计划已结束。可立即运行，或修改运行时间后恢复。',
@@ -235,7 +235,7 @@ export default {
       sections: {
         basic: {
           title: '基本信息',
-          desc: '任务由 WeKnora 助手执行。需要其他智能体时，请在任务中写明委派对象和工作。',
+          desc: '任务由 智工执行。需要其他智能体时，请在任务中写明委派对象和工作。',
         },
         schedule: {
           title: '运行时间',
@@ -2771,7 +2771,7 @@ export default {
     welcomeDesc: '我可以解答 WeKnora 的使用问题，整理知识与文档，帮你配置智能体、工具和自动化。',
     help: {
       label: '助手说明',
-      title: 'WeKnora 助手能做什么',
+      title: '智工能做什么',
       identity: '助手以你的身份工作。它能看到和修改的范围，与你在这个空间里的角色一致，不会超出你的权限。',
       page: '打开后会附带当前页面，可以据此梳理内容、配置智能体和自动化，或代为填写表单。它不会替你点击按钮或保存。',
       access: '输入框下方可以切换权限：只读、修改前确认、自动执行。删除始终需要你确认。管理员限制的最高等级无法突破。',
@@ -4144,8 +4144,8 @@ export default {
     pinned: '已置顶'
   },
   platform: {
-    subtitle: '大模型驱动的企业级知识框架',
-    description: 'RAG 检索、智能体推理、Wiki 知识库，让文档真正被理解和运用',
+    subtitle: '沉淀监理经验资产，AI 赋能科学管控',
+    description: '行业标准、公司制度、项目经验一站查询，让规范随手可得，让经验持续传承',
     rag: 'RAG 增强生成',
     agent: 'ReAct 智能体',
     wiki: 'Wiki 知识库',
@@ -6112,7 +6112,7 @@ export default {
       systemActor: '系统触发',
       actorWithAPIKey: '{actor} · API Key · {name}',
       actorAPIKey: 'API Key · {name}',
-      viaAssistant: '经 WeKnora 助手',
+      viaAssistant: '经 智工',
       knowledgeBase: '知识库',
       countItems: '共 {count} 项',
       titleWithCount: '{title} 等 {count} 项',
@@ -6437,7 +6437,7 @@ export default {
     }
   },
   createChat: {
-    title: 'Hi，我是 WeKnora，让你的知识触手可及',
+    title: '问题请写下，智工来解答',
     newSessionTitle: '新会话',
     openProject: '选择项目',
     clearProject: '取消绑定',
@@ -6800,7 +6800,7 @@ export default {
     firstTime: '首次使用 WeKnora？',
     registerSuccess: '注册成功，请登录',
     registerFailed: '注册失败',
-    subtitle: 'RAG 问答、ReAct 智能体与 Wiki 知识库，大模型驱动的企业级知识框架',
+    subtitle: '行业标准、公司制度、项目经验一站查询，让规范随手可得，让经验持续传承',
     registerSubtitle: '创建账户并开始使用 WeKnora',
     emailPlaceholder: '输入邮箱地址',
     passwordPlaceholder: '输入密码',
@@ -9367,6 +9367,7 @@ export default {
     artifacts: '产物',
     organizations: '共享空间',
     newChat: '新对话',
+    feedback: '知识库反馈',
     settings: '系统设置',
     logout: '退出登录',
     clearMessages: '清空消息',
