@@ -442,3 +442,20 @@ func TestDingTalkUsernameKeepsExistingSuffix(t *testing.T) {
 	assert.Equal(t, "张三-1", result.User.Username)
 	assert.Empty(t, h.users.updated, "a stable name needs no write")
 }
+
+// 绑定钉钉的本地账号（例如使用自己邮箱注册的超管）保留原用户名，
+// 钉钉昵称只用于钉钉自己开出来的占位账号。
+func TestDingTalkResolveKeepsLocalUsernameForBoundEmailAccount(t *testing.T) {
+	h := newHarness(t)
+	ctx := context.Background()
+	h.users.seed(&types.User{ID: "admin", Username: "admin", Email: "admin@jgjl.cn", IsActive: true})
+	require.NoError(t, h.identity.Create(ctx, &types.UserIdentity{
+		UserID: "admin", Provider: types.IdentityProviderDingTalk, ProviderTenant: "corp-1", Subject: "union-1",
+	}))
+
+	result, err := h.login(t, config.AuthRegistrationModeSelfServe, "")
+	require.NoError(t, err)
+	assert.Equal(t, "admin", result.User.ID)
+	assert.Equal(t, "admin", result.User.Username)
+	assert.Empty(t, h.users.updated, "a bound local account must not be renamed")
+}

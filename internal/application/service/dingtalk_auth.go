@@ -383,6 +383,12 @@ func dingTalkUsernameSeed(profile *dingtalk.Profile) string {
 func (s *dingTalkAuthService) syncUsername(
 	ctx context.Context, user *types.User, profile *dingtalk.Profile,
 ) *types.User {
+	// Only accounts provisioned by DingTalk carry the mobile-number placeholder
+	// email. A local account that merely bound DingTalk — the admin account, for
+	// one — keeps the username someone chose for it.
+	if !isDingTalkPlaceholderEmail(user.Email) {
+		return user
+	}
 	name := sanitizeDingTalkUsername(profile.Nick)
 	if name == "" {
 		return user
@@ -402,6 +408,21 @@ func (s *dingTalkAuthService) syncUsername(
 		logger.Warnf(ctx, "dingtalk: rename user %s to %q: %v", user.ID, candidate, err)
 	}
 	return user
+}
+
+// isDingTalkPlaceholderEmail reports whether email is the placeholder built
+// from a mobile number (digits@jgjl.cn) rather than a real mailbox.
+func isDingTalkPlaceholderEmail(email string) bool {
+	local, domain, ok := strings.Cut(strings.ToLower(strings.TrimSpace(email)), "@")
+	if !ok || "@"+domain != dingTalkEmailDomain || local == "" {
+		return false
+	}
+	for _, r := range local {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 // sanitizeDingTalkUsername keeps letters, digits, '_', '.' and '-' — Chinese
