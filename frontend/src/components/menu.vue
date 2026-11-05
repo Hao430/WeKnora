@@ -219,6 +219,12 @@
             <UserMenu />
         </div>
 
+        <!-- 问题反馈弹窗：展示二维码 -->
+        <t-dialog v-model:visible="showFeedbackDialog" :header="t('menu.feedback')" :footer="false" width="360px">
+            <div class="feedback-qrcode-box">
+                <img class="feedback-qrcode" :src="feedbackQrcode" alt="反馈二维码">
+            </div>
+        </t-dialog>
     </div>
 </template>
 
@@ -305,7 +311,8 @@ import dingtalkLogo from '@/assets/img/im/dingtalk.svg';
 import mattermostLogo from '@/assets/img/im/mattermost.svg';
 import wechatLogo from '@/assets/img/im/wechat.svg';
 import qqbotLogo from '@/assets/img/im/qqbot.png';
-import { FEEDBACK_FORM_URL } from '@/config/feedback';
+import feedbackQrcode from '@/assets/img/feedback-qrcode.png';
+const showFeedbackDialog = ref(false);
 
 const PLATFORM_LOGO: Record<string, string> = {
     wecom: wecomLogo,
@@ -1194,8 +1201,8 @@ const handleMenuClick = async (path: string) => {
         // 组织菜单项：跳转到组织列表
         router.push('/platform/organizations')
     } else if (path === 'feedback') {
-        // 问题反馈：跳转公司智能表单
-        window.open(FEEDBACK_FORM_URL, '_blank', 'noopener,noreferrer')
+        // 问题反馈：弹出二维码
+        showFeedbackDialog.value = true
     } else if (path === 'settings') {
         // 设置菜单项：打开设置弹窗并跳转路由
         uiStore.openSettings()
@@ -2013,6 +2020,16 @@ const resizeSidebar = (delta: number, keyboard: boolean) => {
 @media (prefers-reduced-motion: reduce) {
     .aside_box .submenu_item_p.session-chat-row--revealed {
         animation: none;
+    }
+}
+
+.feedback-qrcode-box {
+    display: flex;
+    justify-content: center;
+
+    .feedback-qrcode {
+        width: 260px;
+        height: 260px;
     }
 }
 </style>
