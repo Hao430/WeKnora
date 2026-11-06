@@ -4666,6 +4666,7 @@ export default {
         successIdempotent: '用户已存在，未做任何更改',
         missingPassword: '用户已创建，但未返回生成的密码。请使用重置密码来恢复访问。',
         failed: '创建用户失败',
+        dingtalkMobileNotFound: '钉钉通讯录中未找到该手机号，请核对后重试',
         validation: {
           usernameRequired: '请输入用户名',
           usernameLength: '用户名长度必须为 2-50 个字符',

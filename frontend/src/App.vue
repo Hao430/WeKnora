@@ -120,12 +120,12 @@ const persistOIDCLoginResponse = async (response: any) => {
     if (result.ok) MessagePlugin.success(t('inviteRegister.joined'))
     else MessagePlugin.warning(t('inviteRegister.invalidBody'))
     // 会话已有效，无论 token 是否兑换成功都进入应用。
-    router.replace('/platform/knowledge-bases')
+    router.replace('/platform/creatChat')
     return
   }
 
   await nextTick()
-  router.replace(authStore.hasValidTenant ? '/platform/knowledge-bases' : '/onboarding/workspace')
+  router.replace(authStore.hasValidTenant ? '/platform/creatChat' : '/onboarding/workspace')
 }
 
 const handleGlobalOIDCCallback = async () => {

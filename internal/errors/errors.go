@@ -49,6 +49,11 @@ const (
 	// parsing the backwards-compatible English error message.
 	ErrModelInUse ErrorCode = 2300
 
+	// DingTalk provisioning errors (2400-2499).
+	// The typed code lets clients render a localized hint (e.g. "check the
+	// mobile number") instead of a generic provisioning failure.
+	ErrDingTalkMobileNotFound ErrorCode = 2400
+
 	// Add more error codes here
 )
 

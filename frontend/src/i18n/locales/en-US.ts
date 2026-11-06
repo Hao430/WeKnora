@@ -5351,6 +5351,7 @@ export default {
         successIdempotent: 'User already existed; no changes made',
         missingPassword: 'User was created but the generated password was not returned. Reset the password to recover access.',
         failed: 'Failed to create user',
+        dingtalkMobileNotFound: 'Mobile number not found in the DingTalk corp directory, please verify and retry',
         validation: {
           usernameRequired: 'Enter a username',
           usernameLength: 'Username must be 2-50 characters',

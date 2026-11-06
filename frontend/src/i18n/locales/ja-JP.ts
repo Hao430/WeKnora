@@ -5345,6 +5345,7 @@ export default {
         successIdempotent: 'ユーザはすでに存在するため、変更はありません',
         missingPassword: 'ユーザは作成されましたが、生成されたパスワードが返されませんでした。パスワードをリセットしてアクセスを復旧してください。',
         failed: 'ユーザの作成に失敗しました',
+        dingtalkMobileNotFound: 'DingTalkの連絡先にこの携帯番号が見つかりません。番号を確認して再試行してください。',
         validation: {
           usernameRequired: 'ユーザ名を入力してください',
           usernameLength: 'ユーザ名は2〜50文字で入力してください',

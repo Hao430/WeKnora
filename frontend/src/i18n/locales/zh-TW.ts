@@ -4660,6 +4660,7 @@ export default {
         successIdempotent: '使用者已存在，未做任何更改',
         missingPassword: '使用者已建立，但未返回生成的密碼。請使用重設密碼來復原存取。',
         failed: '建立使用者失敗',
+        dingtalkMobileNotFound: '釘釘通訊錄中未找到該手機號，請核對後重試',
         validation: {
           usernameRequired: '請輸入使用者名',
           usernameLength: '使用者名長度必須為 2-50 個字符',

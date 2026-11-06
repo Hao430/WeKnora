@@ -4658,6 +4658,7 @@ export default {
         successIdempotent: '이미 존재하는 사용자입니다. 변경 사항이 없습니다',
         missingPassword: '사용자는 생성되었지만 생성된 비밀번호가 반환되지 않았습니다. 비밀번호를 재설정해 접근을 복구하세요.',
         failed: '사용자 생성 실패',
+        dingtalkMobileNotFound: 'DingTalk 주소록에서 해당 휴대폰 번호를 찾을 수 없습니다. 번호를 확인 후 다시 시도하세요.',
         validation: {
           usernameRequired: '사용자 이름을 입력하세요',
           usernameLength: '사용자 이름은 2~50자여야 합니다',

@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/WeKnora/internal/config"
 	"github.com/Tencent/WeKnora/internal/database"
 	apperrors "github.com/Tencent/WeKnora/internal/errors"
+	"github.com/Tencent/WeKnora/internal/infrastructure/dingtalk"
 	"github.com/Tencent/WeKnora/internal/infrastructure/docparser"
 	"github.com/Tencent/WeKnora/internal/logger"
 	modellimiter "github.com/Tencent/WeKnora/internal/models/limiter"
@@ -1874,14 +1875,28 @@ func (h *SystemHandler) ProvisionDingTalkUser(c *gin.Context) {
 		switch {
 		case errors.Is(err, service.ErrDingTalkMobileRequired),
 			errors.Is(err, service.ErrInvalidTenantRole):
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.Error(apperrors.NewBadRequestError(err.Error()))
 		case errors.Is(err, service.ErrDingTalkEmailTaken):
-			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+			c.Error(apperrors.NewConflictError(err.Error()))
 		case errors.Is(err, service.ErrDingTalkTenantForbidden):
-			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			c.Error(apperrors.NewForbiddenError(err.Error()))
+		case errors.Is(err, dingtalk.ErrCodeRejected):
+			// Profile lookup refused (e.g. the mobile is not in the corp
+			// directory). Typed code so the dialog can show a localized
+			// "check the number" hint instead of a generic failure.
+			logger.Warnf(ctx, "DingTalk profile lookup rejected: %v", err)
+			c.Error(&apperrors.AppError{
+				Code:     apperrors.ErrDingTalkMobileNotFound,
+				Message:  "Mobile number not found in the DingTalk corp directory",
+				HTTPCode: http.StatusBadRequest,
+			})
 		default:
 			logger.Errorf(ctx, "Admin DingTalk provisioning failed: %v", err)
-			c.JSON(http.StatusBadGateway, gin.H{"error": "DingTalk provisioning failed"})
+			c.Error(&apperrors.AppError{
+				Code:     apperrors.ErrInternalServer,
+				Message:  "DingTalk provisioning failed",
+				HTTPCode: http.StatusBadGateway,
+			})
 		}
 		return
 	}

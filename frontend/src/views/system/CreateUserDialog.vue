@@ -74,6 +74,14 @@
                   :label="tenant.name" />
               </t-select>
             </t-form-item>
+            <t-form-item v-if="usingDingtalk && form.tenantId" :label="t('tenantMember.add.roleLabel')"
+              name="tenantRole">
+              <t-select v-model="form.tenantRole" :disabled="submitting" :popup-props="tenantSelectPopupProps">
+                <t-option value="contributor" :label="t('tenantMember.role.contributor')" />
+                <t-option value="admin" :label="t('tenantMember.role.admin')" />
+                <t-option value="viewer" :label="t('tenantMember.role.viewer')" />
+              </t-select>
+            </t-form-item>
             <template v-if="!usingDingtalk">
               <t-form-item :label="t('system.globalSettings.createUser.usernameLabel')" name="username">
                 <t-input v-model="form.username" type="text" clearable autocomplete="off" :disabled="submitting"
@@ -153,6 +161,7 @@ const formRef = ref<FormInstanceFunctions>()
 const form = reactive({
   dingtalkMobile: '',
   tenantId: undefined as number | undefined,
+  tenantRole: 'contributor',
   username: '',
   email: '',
   autoGenerate: true,
@@ -257,6 +266,7 @@ onUnmounted(() => {
 function resetFormFields() {
   form.dingtalkMobile = ''
   form.tenantId = undefined
+  form.tenantRole = 'contributor'
   form.username = ''
   form.email = ''
   form.autoGenerate = true
@@ -284,7 +294,9 @@ async function submit() {
     if (usingDingtalk.value) {
       const resp = await provisionDingTalkUser({
         mobile: form.dingtalkMobile.trim(),
-        ...(form.tenantId ? { tenant_id: form.tenantId } : {}),
+        ...(form.tenantId
+          ? { tenant_id: form.tenantId, role: form.tenantRole }
+          : {}),
       })
       emit('created')
       createUserSuccess.value = {
@@ -330,7 +342,10 @@ async function submit() {
       emit('update:visible', false)
     }
   } catch (err: any) {
-    const msg = err?.message || t('system.globalSettings.createUser.failed')
+    // 2400 = 钉钉通讯录未找到该手机号（后端 ErrDingTalkMobileNotFound）
+    const msg = err?.error?.code === 2400
+      ? t('system.globalSettings.createUser.dingtalkMobileNotFound')
+      : err?.message || t('system.globalSettings.createUser.failed')
     announce(msg, 'error')
   } finally {
     submitting.value = false
