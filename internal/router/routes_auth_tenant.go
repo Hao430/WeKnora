@@ -332,6 +332,7 @@ func RegisterSystemAdminRoutes(
 		adminRoutes.POST("/users/status", handler.SetUserStatus)
 		adminRoutes.POST("/users/reset-password", handler.ResetUserPassword)
 		adminRoutes.POST("/users/create", handler.CreateSystemUser)
+		adminRoutes.POST("/users/dingtalk", handler.ProvisionDingTalkUser)
 		adminRoutes.GET("/api-keys", handler.ListPlatformAPIKeys)
 		adminRoutes.POST("/api-keys", handler.CreatePlatformAPIKey)
 		adminRoutes.DELETE("/api-keys/:key_id", handler.DeletePlatformAPIKey)

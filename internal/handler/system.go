@@ -44,9 +44,13 @@ type SystemHandler struct {
 	documentReader   interfaces.DocumentReader
 	tenantSvc        interfaces.TenantService
 	userSvc          interfaces.UserService
-	modelCatalogSvc  *service.ModelCatalogService
-	systemSettingSvc interfaces.SystemSettingService
-	apiKeySvc        interfaces.TenantAPIKeyService
+	// dingTalkProvisioner backs the SystemAdmin DingTalk pre-provisioning
+	// endpoint. Optional - wired via SetDingTalkProvisioner, mirroring
+	// AuthHandler.SetDingTalkAuth.
+	dingTalkProvisioner interfaces.DingTalkAuthService
+	modelCatalogSvc     *service.ModelCatalogService
+	systemSettingSvc    interfaces.SystemSettingService
+	apiKeySvc           interfaces.TenantAPIKeyService
 	// auditSvc is optional — when nil, emitAdminAudit no-ops so unit
 	// tests that wire a partial container still compile. In production
 	// the dig graph always provides one.
@@ -1821,6 +1825,80 @@ func (h *SystemHandler) CreateSystemUser(c *gin.Context) {
 		User:              user.ToUserInfo(),
 		GeneratedPassword: generatedPassword,
 	})
+}
+
+// SetDingTalkProvisioner wires the DingTalk auth service used by the admin
+// pre-provisioning endpoint. A setter keeps the NewSystemHandler signature
+// stable for its many call sites and tests.
+func (h *SystemHandler) SetDingTalkProvisioner(svc interfaces.DingTalkAuthService) *SystemHandler {
+	h.dingTalkProvisioner = svc
+	return h
+}
+
+// ProvisionDingTalkUser godoc
+// @Summary      Pre-provision a DingTalk-bound user (SystemAdmin)
+// @Description  Resolve a corp mobile number through DingTalk, create the
+// @Description  local account with a random password, bind the identity and
+// @Description  optionally enroll the member into an existing tenant, so the
+// @Description  member only has to click DingTalk login afterwards. Works
+// @Description  with registration closed; never auto-creates a tenant.
+// @Tags         System Admin
+// @Accept       json
+// @Produce      json
+// @Param        request body types.AdminProvisionDingTalkUserRequest true "DingTalk provisioning request"
+// @Success      201  {object}  map[string]interface{}  "User created"
+// @Success      200  {object}  map[string]interface{}  "Already provisioned (idempotent retry)"
+// @Failure      400  {object}  map[string]interface{}  "Invalid request, DingTalk lookup failed, or invalid role"
+// @Failure      409  {object}  map[string]interface{}  "An account already exists for this phone number"
+// @Failure      502  {object}  map[string]interface{}  "DingTalk provisioning failed"
+// @Router       /system/admin/users/dingtalk [post]
+func (h *SystemHandler) ProvisionDingTalkUser(c *gin.Context) {
+	ctx := logger.CloneContext(c.Request.Context())
+	if h.dingTalkProvisioner == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "DingTalk provisioning is not configured"})
+		return
+	}
+	var req types.AdminProvisionDingTalkUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid DingTalk provisioning request"})
+		return
+	}
+	req.Mobile = strings.TrimSpace(req.Mobile)
+	if req.Mobile == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Mobile is required"})
+		return
+	}
+
+	user, idempotent, err := h.dingTalkProvisioner.AdminProvision(ctx, &req)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrDingTalkMobileRequired),
+			errors.Is(err, service.ErrInvalidTenantRole):
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		case errors.Is(err, service.ErrDingTalkEmailTaken):
+			c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+		case errors.Is(err, service.ErrDingTalkTenantForbidden):
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		default:
+			logger.Errorf(ctx, "Admin DingTalk provisioning failed: %v", err)
+			c.JSON(http.StatusBadGateway, gin.H{"error": "DingTalk provisioning failed"})
+		}
+		return
+	}
+
+	h.emitAdminAudit(ctx, types.AuditActionSystemUserCreated, user, map[string]any{
+		"target_email":    user.Email,
+		"target_username": user.Username,
+		"dingtalk":        true,
+		"idempotent":      idempotent,
+		"tenant_id":       req.TenantID,
+	})
+	logger.Infof(ctx, "Admin DingTalk provisioning ok (user %s, idempotent=%v)", user.ID, idempotent)
+	status := http.StatusCreated
+	if idempotent {
+		status = http.StatusOK
+	}
+	c.JSON(status, gin.H{"user": user.ToUserInfo(), "idempotent": idempotent})
 }
 
 // ============================================================================

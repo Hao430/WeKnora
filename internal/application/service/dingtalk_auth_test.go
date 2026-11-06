@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	apprepo "github.com/Tencent/WeKnora/internal/application/repository"
@@ -27,6 +28,11 @@ func (f *fakeDingTalkClient) GetUserByInnerCode(_ context.Context, _ string) (*d
 }
 
 func (f *fakeDingTalkClient) GetUserByOAuthCode(_ context.Context, _ string) (*dingtalk.Profile, error) {
+	f.calls++
+	return f.profile, f.err
+}
+
+func (f *fakeDingTalkClient) GetUserByMobile(_ context.Context, _ string) (*dingtalk.Profile, error) {
 	f.calls++
 	return f.profile, f.err
 }
@@ -141,10 +147,32 @@ func newTestIdentityRepo(t *testing.T) *gorm.DB {
 	return db
 }
 
+type fakeMemberStore struct {
+	added      []string
+	err        error
+	membership map[string]*types.TenantMember // key: actorID:tenantID
+}
+
+func (f *fakeMemberStore) AddMember(_ context.Context, userID string, tenantID uint64, role types.TenantRole, _ *string) (*types.TenantMember, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	f.added = append(f.added, fmt.Sprintf("%s:%d:%s", userID, tenantID, role))
+	return &types.TenantMember{UserID: userID, TenantID: tenantID, Role: role}, nil
+}
+
+func (f *fakeMemberStore) GetMembership(_ context.Context, userID string, tenantID uint64) (*types.TenantMember, error) {
+	if m, ok := f.membership[fmt.Sprintf("%s:%d", userID, tenantID)]; ok {
+		return m, nil
+	}
+	return nil, ErrMembershipNotFound
+}
+
 type harness struct {
 	svc      *dingTalkAuthService
 	users    *fakeUserStore
 	invites  *fakeInviteStore
+	members  *fakeMemberStore
 	client   *fakeDingTalkClient
 	identity interfaces.UserIdentityRepository
 }
@@ -157,14 +185,16 @@ func newHarness(t *testing.T) *harness {
 		UnionID: "union-1", UserID: "dt-1", Nick: "张三", Mobile: "13800000000",
 	}}
 	repo := apprepo.NewUserIdentityRepository(newTestIdentityRepo(t))
+	members := &fakeMemberStore{}
 	svc := &dingTalkAuthService{
 		identityRepo: repo,
 		users:        users,
 		invitations:  invites,
+		members:      members,
 		client:       client,
 		corpID:       "corp-1",
 	}
-	return &harness{svc: svc, users: users, invites: invites, client: client, identity: repo}
+	return &harness{svc: svc, users: users, invites: invites, members: members, client: client, identity: repo}
 }
 
 func (h *harness) login(t *testing.T, mode, token string) (*types.DingTalkLoginResult, error) {
@@ -458,4 +488,102 @@ func TestDingTalkResolveKeepsLocalUsernameForBoundEmailAccount(t *testing.T) {
 	assert.Equal(t, "admin", result.User.ID)
 	assert.Equal(t, "admin", result.User.Username)
 	assert.Empty(t, h.users.updated, "a bound local account must not be renamed")
+}
+
+func TestAdminProvisionCreatesBoundAccount(t *testing.T) {
+	h := newHarness(t)
+	user, idempotent, err := h.svc.AdminProvision(context.Background(), &types.AdminProvisionDingTalkUserRequest{
+		Mobile: "13800000000",
+	})
+	require.NoError(t, err)
+	assert.False(t, idempotent)
+
+	require.Len(t, h.users.register, 1)
+	assert.Equal(t, "13800000000@jgjl.cn", h.users.register[0].Email)
+	assert.Equal(t, types.TenantProvisioningTenantless, h.users.register[0].TenantProvisioning,
+		"admin provisioning never auto-creates a personal space")
+
+	identity, err := h.identity.GetBySubject(context.Background(), types.IdentityProviderDingTalk, "corp-1", "union-1")
+	require.NoError(t, err)
+	assert.Equal(t, user.ID, identity.UserID)
+	assert.Empty(t, h.members.added, "no tenant requested, no membership")
+}
+
+func TestAdminProvisionEnrollsTenantWithDefaultRole(t *testing.T) {
+	h := newHarness(t)
+	adminOf42(t, h)
+	user, _, err := h.svc.AdminProvision(adminCtx(), &types.AdminProvisionDingTalkUserRequest{
+		Mobile:   "13800000000",
+		TenantID: 42,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, []string{fmt.Sprintf("%s:42:%s", user.ID, types.TenantRoleContributor)}, h.members.added)
+}
+
+func TestAdminProvisionRejectsNonAdminTenant(t *testing.T) {
+	// 各用例用子测试隔离：newTestIdentityRepo 按测试名共享内存库。
+	cases := []struct {
+		name string
+		role types.TenantRole
+		seed bool
+	}{
+		{"contributor", types.TenantRoleContributor, true},
+		{"viewer", types.TenantRoleViewer, true},
+		{"no membership", "", false},
+	}
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newHarness(t)
+			if tt.seed {
+				h.members.membership = map[string]*types.TenantMember{
+					"admin-1:42": {UserID: "admin-1", TenantID: 42, Role: tt.role},
+				}
+			}
+			_, _, err := h.svc.AdminProvision(adminCtx(), &types.AdminProvisionDingTalkUserRequest{
+				Mobile: "13800000000", TenantID: 42,
+			})
+			assert.ErrorIs(t, err, ErrDingTalkTenantForbidden)
+			assert.Empty(t, h.users.register, "no account may be created when the actor is not a tenant admin")
+		})
+	}
+}
+
+// adminCtx 模拟经过认证中间件后的请求上下文。
+func adminCtx() context.Context {
+	return context.WithValue(context.Background(), types.UserIDContextKey, "admin-1")
+}
+
+// adminOf42 让 admin-1 成为空间 42 的管理员。
+func adminOf42(t *testing.T, h *harness) {
+	t.Helper()
+	h.members.membership = map[string]*types.TenantMember{
+		"admin-1:42": {UserID: "admin-1", TenantID: 42, Role: types.TenantRoleAdmin},
+	}
+}
+
+func TestAdminProvisionIsIdempotent(t *testing.T) {
+	h := newHarness(t)
+	adminOf42(t, h)
+	first, _, err := h.svc.AdminProvision(adminCtx(), &types.AdminProvisionDingTalkUserRequest{
+		Mobile: "13800000000", TenantID: 42,
+	})
+	require.NoError(t, err)
+
+	second, idempotent, err := h.svc.AdminProvision(adminCtx(), &types.AdminProvisionDingTalkUserRequest{
+		Mobile: "13800000000", TenantID: 42,
+	})
+	require.NoError(t, err)
+	assert.True(t, idempotent)
+	assert.Equal(t, first.ID, second.ID)
+	assert.Len(t, h.users.register, 1, "no duplicate account on retry")
+}
+
+func TestAdminProvisionRejectsTakenEmail(t *testing.T) {
+	h := newHarness(t)
+	h.users.seed(&types.User{ID: "u-1", Username: "taken", Email: "13800000000@jgjl.cn", IsActive: true})
+	_, _, err := h.svc.AdminProvision(context.Background(), &types.AdminProvisionDingTalkUserRequest{
+		Mobile: "13800000000",
+	})
+	assert.ErrorIs(t, err, ErrDingTalkEmailTaken)
+	assert.Empty(t, h.users.register)
 }

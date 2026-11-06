@@ -432,6 +432,31 @@ export async function createSystemUser(req: CreateSystemUserRequest): Promise<Cr
   return { ...response, created: response.$httpStatus === 201 }
 }
 
+export interface ProvisionDingTalkUserRequest {
+  /** 企业钉钉手机号，服务端通过 getbymobile 解析钉钉身份。 */
+  mobile: string
+  /** 可选，创建后加入的空间 ID；不传则账户不归属任何空间。 */
+  tenant_id?: number
+  /** 加入空间时的角色，缺省为 contributor。 */
+  role?: string
+}
+
+export interface ProvisionDingTalkUserResponse {
+  user: SystemAdminUser
+  /** true 表示该钉钉身份已绑定过账户（幂等重试）。 */
+  idempotent: boolean
+}
+
+/**
+ * Pre-provision a DingTalk-bound account (SystemAdmin only): resolve the
+ * corp mobile through DingTalk, create the local user with a random
+ * password and bind the identity, so the member only has to click
+ * DingTalk login afterwards.
+ */
+export async function provisionDingTalkUser(req: ProvisionDingTalkUserRequest): Promise<ProvisionDingTalkUserResponse> {
+  return await post<ProvisionDingTalkUserResponse>('/api/v1/system/admin/users/dingtalk', req)
+}
+
 // ---- System Settings (P1) ----
 
 /**

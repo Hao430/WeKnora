@@ -238,6 +238,23 @@ type AdminCreateUserRequest struct {
 	Password *string `json:"password"`
 }
 
+// AdminProvisionDingTalkUserRequest is the payload for a SystemAdmin
+// pre-creating a DingTalk-bound account: the operator supplies the corp
+// mobile number, the server resolves the DingTalk profile, creates the
+// local user with a random password and binds the identity, so the member
+// only has to click DingTalk login afterwards. Registration policy does
+// not gate this path - the admin action replaces self-serve signup.
+type AdminProvisionDingTalkUserRequest struct {
+	// Mobile of the corp member; resolved through DingTalk getbymobile.
+	Mobile string `json:"mobile" binding:"required"`
+	// TenantID enrolls the user into an existing tenant. 0 keeps the
+	// account tenantless - the platform never auto-creates a personal
+	// space on this path.
+	TenantID uint64 `json:"tenant_id"`
+	// Role inside the tenant. Empty means contributor.
+	Role string `json:"role"`
+}
+
 // TenantProvisioningMode controls what UserService.Register does after it
 // has validated the identity fields. Joining an existing tenant is
 // orchestrated by the invitation handler because the invitation token is the

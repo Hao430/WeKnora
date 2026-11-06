@@ -73,6 +73,10 @@ type Client interface {
 	GetUserByInnerCode(ctx context.Context, code string) (*Profile, error)
 	// GetUserByOAuthCode resolves a browser scan (OAuth2) code.
 	GetUserByOAuthCode(ctx context.Context, code string) (*Profile, error)
+	// GetUserByMobile resolves a corp member by phone number. Used by the
+	// SystemAdmin pre-provisioning flow; the mobile lookup requires the
+	// app contact read scope.
+	GetUserByMobile(ctx context.Context, mobile string) (*Profile, error)
 }
 
 type client struct {
@@ -128,6 +132,44 @@ func (c *client) GetUserByInnerCode(ctx context.Context, code string) (*Profile,
 		return nil, fmt.Errorf("%w: no userid in the getuserinfo response", ErrCodeRejected)
 	}
 
+	return c.userDetailByUserID(ctx, token, info.Result.UserID)
+}
+
+// GetUserByMobile resolves a corp member by phone number, then reads the full
+// profile. Same dance as GetUserByInnerCode minus the code exchange.
+func (c *client) GetUserByMobile(ctx context.Context, mobile string) (*Profile, error) {
+	mobile = strings.TrimSpace(mobile)
+	if mobile == "" {
+		return nil, errors.New("dingtalk mobile is required")
+	}
+	token, err := c.accessToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var found struct {
+		ErrCode int    `json:"errcode"`
+		ErrMsg  string `json:"errmsg"`
+		Result  struct {
+			UserID string `json:"userid"`
+		} `json:"result"`
+	}
+	endpoint := c.legacyBase + "/topapi/v2/user/getbymobile"
+	if err := c.postQueryToken(ctx, endpoint, token, map[string]string{"mobile": mobile}, &found); err != nil {
+		return nil, err
+	}
+	if found.ErrCode != 0 {
+		return nil, fmt.Errorf("%w: getbymobile errcode=%d errmsg=%s", ErrCodeRejected, found.ErrCode, found.ErrMsg)
+	}
+	if found.Result.UserID == "" {
+		return nil, fmt.Errorf("%w: no userid in the getbymobile response", ErrCodeRejected)
+	}
+	return c.userDetailByUserID(ctx, token, found.Result.UserID)
+}
+
+// userDetailByUserID reads /topapi/v2/user/get for a corp userid and projects
+// the fields the login and provisioning flows consume.
+func (c *client) userDetailByUserID(ctx context.Context, token, userid string) (*Profile, error) {
 	var detail struct {
 		ErrCode int    `json:"errcode"`
 		ErrMsg  string `json:"errmsg"`
@@ -140,8 +182,8 @@ func (c *client) GetUserByInnerCode(ctx context.Context, code string) (*Profile,
 			Active  *bool   `json:"active"`
 		} `json:"result"`
 	}
-	endpoint = c.legacyBase + "/topapi/v2/user/get"
-	body := map[string]any{"userid": info.Result.UserID, "language": "zh_CN"}
+	endpoint := c.legacyBase + "/topapi/v2/user/get"
+	body := map[string]any{"userid": userid, "language": "zh_CN"}
 	if err := c.postQueryToken(ctx, endpoint, token, body, &detail); err != nil {
 		return nil, err
 	}

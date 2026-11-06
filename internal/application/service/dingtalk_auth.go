@@ -42,6 +42,9 @@ var (
 	// address, and silently binding it would hand an existing account to
 	// whoever holds the matching mobile number.
 	ErrDingTalkEmailTaken = errors.New("an account already exists for this phone number")
+	// ErrDingTalkTenantForbidden means the operator tried to enroll the new
+	// member into a workspace they do not administer themselves.
+	ErrDingTalkTenantForbidden = errors.New("you need admin permission in the target tenant")
 )
 
 // userStore is the slice of UserService this flow needs. Keeping it narrow
@@ -63,10 +66,18 @@ type inviteStore interface {
 	AcceptByToken(ctx context.Context, plainToken string, newUserID string) (*types.TenantMember, error)
 }
 
+// memberStore is the slice of TenantMemberService the admin provisioning
+// path needs.
+type memberStore interface {
+	AddMember(ctx context.Context, userID string, tenantID uint64, role types.TenantRole, invitedBy *string) (*types.TenantMember, error)
+	GetMembership(ctx context.Context, userID string, tenantID uint64) (*types.TenantMember, error)
+}
+
 type dingTalkAuthService struct {
 	identityRepo interfaces.UserIdentityRepository
 	users        userStore
 	invitations  inviteStore
+	members      memberStore
 	client       dingtalk.Client
 	corpID       string
 }
@@ -77,6 +88,7 @@ func NewDingTalkAuthService(
 	identityRepo interfaces.UserIdentityRepository,
 	users interfaces.UserService,
 	invitations interfaces.TenantInvitationService,
+	members interfaces.TenantMemberService,
 	client dingtalk.Client,
 	cfg *config.Config,
 ) interfaces.DingTalkAuthService {
@@ -88,6 +100,7 @@ func NewDingTalkAuthService(
 		identityRepo: identityRepo,
 		users:        users,
 		invitations:  invitations,
+		members:      members,
 		client:       client,
 		corpID:       corpID,
 	}
@@ -292,6 +305,106 @@ func (s *dingTalkAuthService) provision(
 		logger.Warnf(ctx, "dingtalk: failed to mark account %s as SSO-only: %v", user.ID, err)
 	}
 	return user, true, nil
+}
+
+// AdminProvision pre-creates a DingTalk-bound account for an operator.
+// The registration policy deliberately does not gate it: closing signup
+// shuts the self-serve doors, while this endpoint is the SystemAdmin
+// holding them open for a specific member. Idempotent - provisioning an
+// already-bound mobile returns the existing account.
+func (s *dingTalkAuthService) AdminProvision(
+	ctx context.Context, req *types.AdminProvisionDingTalkUserRequest,
+) (*types.User, bool, error) {
+	profile, err := s.client.GetUserByMobile(ctx, req.Mobile)
+	if err != nil {
+		return nil, false, err
+	}
+	mobile := strings.TrimSpace(profile.Mobile)
+	if mobile == "" || strings.Contains(mobile, "*") {
+		// Masked or missing in the contact read - fall back to what the
+		// operator typed; it came from the same corp directory.
+		mobile = strings.TrimSpace(req.Mobile)
+	}
+	if mobile == "" {
+		return nil, false, ErrDingTalkMobileRequired
+	}
+
+	// The permission gate runs before anything is written: a refused
+	// request must not leave a provisioned account behind.
+	if req.TenantID != 0 && s.members != nil {
+		if err := s.requireTenantAdmin(ctx, req.TenantID); err != nil {
+			return nil, false, err
+		}
+	}
+
+	identity, err := s.identityRepo.GetBySubject(ctx, types.IdentityProviderDingTalk, s.corpID, profile.UnionID)
+	switch {
+	case err == nil:
+		user, userErr := s.users.GetUserByID(ctx, identity.UserID)
+		if userErr != nil {
+			return nil, false, fmt.Errorf("load bound user: %w", userErr)
+		}
+		if err := s.enrollTenant(ctx, user.ID, req); err != nil {
+			return nil, false, err
+		}
+		return user, true, nil
+	case errors.Is(err, apprepo.ErrIdentityNotFound):
+		// fall through to first-time provisioning
+	default:
+		return nil, false, fmt.Errorf("lookup dingtalk identity: %w", err)
+	}
+
+	// self_serve reuses the exact first-login provisioning (random nobody-
+	// knows password, SSO-only, placeholder email); the admin action just
+	// replaces the policy gate. Tenantless: only the enrollment below gives
+	// this account a workspace.
+	user, _, err := s.provision(ctx, profile, types.DingTalkLoginInput{
+		RegistrationMode:  config.AuthRegistrationModeSelfServe,
+		DefaultTenantMode: types.TenantProvisioningTenantless,
+	}, "")
+	if err != nil {
+		return nil, false, err
+	}
+	if err := s.enrollTenant(ctx, user.ID, req); err != nil {
+		return nil, false, err
+	}
+	return user, false, nil
+}
+
+// enrollTenant adds the account to the requested workspace. The operator
+// may only hand out workspaces they administer themselves; a missing role
+// defaults to contributor, and joining twice is a no-op so retries stay
+// clean.
+func (s *dingTalkAuthService) enrollTenant(
+	ctx context.Context, userID string, req *types.AdminProvisionDingTalkUserRequest,
+) error {
+	if req.TenantID == 0 || s.members == nil {
+		return nil
+	}
+	actorID, _ := types.UserIDFromContext(ctx)
+	role := types.TenantRole(strings.TrimSpace(req.Role))
+	if role == "" {
+		role = types.TenantRoleContributor
+	}
+	if _, err := s.members.AddMember(ctx, userID, req.TenantID, role, &actorID); err != nil && !errors.Is(err, ErrMembershipAlreadyExists) {
+		return err
+	}
+	return nil
+}
+
+// requireTenantAdmin refuses enrollment into workspaces the operator does
+// not administer. Membership rows are the source of truth - no superuser
+// bypass, per the admin provisioning admission policy.
+func (s *dingTalkAuthService) requireTenantAdmin(ctx context.Context, tenantID uint64) error {
+	actorID, _ := types.UserIDFromContext(ctx)
+	membership, err := s.members.GetMembership(ctx, actorID, tenantID)
+	if err != nil && !errors.Is(err, ErrMembershipNotFound) {
+		return err
+	}
+	if membership == nil || !membership.Role.HasPermission(types.TenantRoleAdmin) {
+		return ErrDingTalkTenantForbidden
+	}
+	return nil
 }
 
 // joinByInvite makes the invited workspace the home tenant (first join only)

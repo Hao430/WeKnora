@@ -17,4 +17,9 @@ type DingTalkAuthService interface {
 	// Bind attaches a DingTalk identity to an already authenticated user.
 	// It never provisions or issues tokens.
 	Bind(ctx context.Context, userID string, in types.DingTalkBindInput) error
+	// AdminProvision pre-creates a DingTalk-bound account on behalf of a
+	// SystemAdmin: mobile -> DingTalk profile -> local user + identity
+	// binding, optionally enrolled into an existing tenant. Returns the
+	// user and whether it was already provisioned (idempotent retry).
+	AdminProvision(ctx context.Context, req *types.AdminProvisionDingTalkUserRequest) (*types.User, bool, error)
 }

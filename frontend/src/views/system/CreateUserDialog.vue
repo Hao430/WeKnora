@@ -26,11 +26,7 @@
             ? t('system.globalSettings.createUser.generated.successTitle')
             : t('system.globalSettings.createUser.dialogTitle') }}
         </div>
-        <p class="system-admin-action-popup-hint">
-          {{ createUserSuccess
-            ? t('system.globalSettings.createUser.generated.successBody')
-            : t('system.globalSettings.createUser.warning') }}
-        </p>
+        <p class="system-admin-action-popup-hint">{{ hintText }}</p>
         <template v-if="createUserSuccess">
           <div class="create-user-reveal">
             <div class="create-user-reveal-item">
@@ -45,7 +41,7 @@
               </span>
               <span class="create-user-reveal-value">{{ createUserSuccess.email }}</span>
             </div>
-            <div class="create-user-reveal-item">
+            <div v-if="createUserSuccess.generatedPassword" class="create-user-reveal-item">
               <span class="create-user-reveal-label">
                 {{ t('system.globalSettings.createUser.generated.passwordLabel') }}
               </span>
@@ -54,7 +50,8 @@
             </div>
           </div>
           <div class="system-admin-action-popup-footer">
-            <t-button theme="primary" variant="outline" @click="copyAccountDetails">
+            <t-button v-if="createUserSuccess.generatedPassword" theme="primary" variant="outline"
+              @click="copyAccountDetails">
               {{ t('system.globalSettings.createUser.generated.copyBtn') }}
             </t-button>
             <t-button theme="primary" @click="acknowledge">
@@ -64,33 +61,48 @@
         </template>
         <template v-else>
           <t-form ref="formRef" :data="form" :rules="rules" label-align="top" class="system-admin-action-popup-form">
-            <t-form-item :label="t('system.globalSettings.createUser.usernameLabel')" name="username">
-              <t-input v-model="form.username" type="text" clearable autocomplete="off" :disabled="submitting"
-                :placeholder="t('system.globalSettings.createUser.usernamePlaceholder')" />
+            <t-form-item :label="t('system.globalSettings.createUser.dingtalkLabel')" name="dingtalkMobile">
+              <t-input v-model="form.dingtalkMobile" type="text" clearable autocomplete="off" :disabled="submitting"
+                :placeholder="t('system.globalSettings.createUser.dingtalkPlaceholder')" />
             </t-form-item>
-            <t-form-item :label="t('system.globalSettings.createUser.emailLabel')" name="email">
-              <t-input v-model="form.email" type="text" clearable autocomplete="off" :disabled="submitting"
-                :placeholder="t('system.globalSettings.createUser.emailPlaceholder')" />
+            <t-form-item v-if="usingDingtalk" :label="t('system.globalSettings.createUser.tenantLabel')"
+              name="tenantId">
+              <t-select v-model="form.tenantId" clearable :disabled="submitting"
+                :popup-props="tenantSelectPopupProps"
+                :placeholder="t('system.globalSettings.createUser.tenantPlaceholder')">
+                <t-option v-for="tenant in adminTenantOptions" :key="tenant.id" :value="tenant.id"
+                  :label="tenant.name" />
+              </t-select>
             </t-form-item>
-            <t-form-item name="autoGenerate">
-              <t-checkbox v-model="form.autoGenerate" :disabled="submitting">
-                {{ t('system.globalSettings.createUser.autoGenerateLabel') }}
-              </t-checkbox>
-            </t-form-item>
-            <template v-if="!form.autoGenerate">
-              <t-form-item :label="t('system.globalSettings.createUser.newPasswordLabel')" name="newPassword">
-                <t-input v-model="form.newPassword" type="password" autocomplete="new-password" :disabled="submitting"
-                  :placeholder="t('system.globalSettings.createUser.newPasswordPlaceholder')">
-                  <template #prefix-icon><t-icon name="lock-on" /></template>
-                </t-input>
+            <template v-if="!usingDingtalk">
+              <t-form-item :label="t('system.globalSettings.createUser.usernameLabel')" name="username">
+                <t-input v-model="form.username" type="text" clearable autocomplete="off" :disabled="submitting"
+                  :placeholder="t('system.globalSettings.createUser.usernamePlaceholder')" />
               </t-form-item>
-              <t-form-item :label="t('system.globalSettings.createUser.confirmPasswordLabel')" name="confirmPassword">
-                <t-input v-model="form.confirmPassword" type="password" autocomplete="new-password"
-                  :disabled="submitting" :placeholder="t('system.globalSettings.createUser.confirmPasswordPlaceholder')"
-                  @enter="submit">
-                  <template #prefix-icon><t-icon name="lock-on" /></template>
-                </t-input>
+              <t-form-item :label="t('system.globalSettings.createUser.emailLabel')" name="email">
+                <t-input v-model="form.email" type="text" clearable autocomplete="off" :disabled="submitting"
+                  :placeholder="t('system.globalSettings.createUser.emailPlaceholder')" />
               </t-form-item>
+              <t-form-item name="autoGenerate">
+                <t-checkbox v-model="form.autoGenerate" :disabled="submitting">
+                  {{ t('system.globalSettings.createUser.autoGenerateLabel') }}
+                </t-checkbox>
+              </t-form-item>
+              <template v-if="!form.autoGenerate">
+                <t-form-item :label="t('system.globalSettings.createUser.newPasswordLabel')" name="newPassword">
+                  <t-input v-model="form.newPassword" type="password" autocomplete="new-password" :disabled="submitting"
+                    :placeholder="t('system.globalSettings.createUser.newPasswordPlaceholder')">
+                    <template #prefix-icon><t-icon name="lock-on" /></template>
+                  </t-input>
+                </t-form-item>
+                <t-form-item :label="t('system.globalSettings.createUser.confirmPasswordLabel')" name="confirmPassword">
+                  <t-input v-model="form.confirmPassword" type="password" autocomplete="new-password"
+                    :disabled="submitting" :placeholder="t('system.globalSettings.createUser.confirmPasswordPlaceholder')"
+                    @enter="submit">
+                    <template #prefix-icon><t-icon name="lock-on" /></template>
+                  </t-input>
+                </t-form-item>
+              </template>
             </template>
           </t-form>
           <div class="system-admin-action-popup-footer">
@@ -112,8 +124,9 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import { MessagePlugin } from 'tdesign-vue-next'
 import type { FormInstanceFunctions, FormRule } from 'tdesign-vue-next'
 import { useI18n } from 'vue-i18n'
-import { createSystemUser, type CreateSystemUserRequest } from '@/api/system'
+import { createSystemUser, provisionDingTalkUser, type CreateSystemUserRequest } from '@/api/system'
 import { getAuthConfig } from '@/api/auth'
+import { useAuthStore } from '@/stores/auth'
 import { copyWithToast } from '@/utils/clipboard'
 import { newPasswordRules } from '@/utils/passwordPolicy'
 import {
@@ -138,11 +151,33 @@ const submitting = ref(false)
 const dismissing = ref(false)
 const formRef = ref<FormInstanceFunctions>()
 const form = reactive({
+  dingtalkMobile: '',
+  tenantId: undefined as number | undefined,
   username: '',
   email: '',
   autoGenerate: true,
   newPassword: '',
   confirmPassword: '',
+})
+/** 可分配的空间 = 自己拥有 admin/owner 角色的空间；后端会做同样校验 */
+const adminTenantOptions = computed(() =>
+  useAuthStore()
+    .memberships.filter((m) => m.role === 'admin' || m.role === 'owner')
+    .map((m) => ({ id: m.tenant_id, name: m.tenant_name || String(m.tenant_id) })),
+)
+/** 下拉层须高于本弹窗遮罩（3050），参照 TenantMembers 的 roleSelectPopupProps */
+const tenantSelectPopupProps = {
+  zIndex: 6200,
+  overlayClassName: 'create-user-tenant-select-popup',
+}
+const usingDingtalk = computed(() => form.dingtalkMobile.trim().length > 0)
+const hintText = computed(() => {
+  if (createUserSuccess.value && !createUserSuccess.value.generatedPassword) {
+    return t('system.globalSettings.createUser.dingtalkSuccessHint')
+  }
+  return createUserSuccess.value
+    ? t('system.globalSettings.createUser.generated.successBody')
+    : t('system.globalSettings.createUser.warning')
 })
 const createUserSuccess = ref<CreateUserReveal | null>(null)
 const locked = computed(() => submitting.value || createUserSuccess.value !== null)
@@ -157,23 +192,34 @@ const loadAuthConfig = async () => {
 }
 
 const rules = computed<Record<string, FormRule[]>>(() => ({
-  username: [
-    { required: true, message: t('system.globalSettings.createUser.validation.usernameRequired'), trigger: 'blur' },
-    { min: 2, max: 50, message: t('system.globalSettings.createUser.validation.usernameLength'), trigger: 'blur' },
-  ],
-  email: [
-    { required: true, message: t('system.globalSettings.createUser.validation.emailRequired'), trigger: 'blur' },
-    { email: true, message: t('system.globalSettings.createUser.validation.emailInvalid'), trigger: 'blur' },
-  ],
-  newPassword: newPasswordRules(t, complexPasswordEnabled.value),
-  confirmPassword: [
-    { required: true, message: t('system.globalSettings.createUser.validation.confirmRequired'), trigger: 'blur' },
+  dingtalkMobile: [
     {
-      validator: (value: string) => value === form.newPassword,
-      message: t('system.globalSettings.createUser.validation.passwordMismatch'),
+      validator: (value: string) => !value || /^[+\d][\d\s-]{5,19}$/.test(value.trim()),
+      message: t('system.globalSettings.createUser.validation.dingtalkMobileInvalid'),
       trigger: 'blur',
     },
   ],
+  ...(!usingDingtalk.value
+    ? {
+        username: [
+          { required: true, message: t('system.globalSettings.createUser.validation.usernameRequired'), trigger: 'blur' },
+          { min: 2, max: 50, message: t('system.globalSettings.createUser.validation.usernameLength'), trigger: 'blur' },
+        ],
+        email: [
+          { required: true, message: t('system.globalSettings.createUser.validation.emailRequired'), trigger: 'blur' },
+          { email: true, message: t('system.globalSettings.createUser.validation.emailInvalid'), trigger: 'blur' },
+        ],
+        newPassword: newPasswordRules(t, complexPasswordEnabled.value),
+        confirmPassword: [
+          { required: true, message: t('system.globalSettings.createUser.validation.confirmRequired'), trigger: 'blur' },
+          {
+            validator: (value: string) => value === form.newPassword,
+            message: t('system.globalSettings.createUser.validation.passwordMismatch'),
+            trigger: 'blur',
+          },
+        ],
+      }
+    : {}),
 }))
 
 watch(() => props.visible, async (visible) => {
@@ -209,6 +255,8 @@ onUnmounted(() => {
 })
 
 function resetFormFields() {
+  form.dingtalkMobile = ''
+  form.tenantId = undefined
   form.username = ''
   form.email = ''
   form.autoGenerate = true
@@ -232,6 +280,25 @@ async function submit() {
   try {
     const valid = await formRef.value?.validate?.()
     if (valid !== true) return
+
+    if (usingDingtalk.value) {
+      const resp = await provisionDingTalkUser({
+        mobile: form.dingtalkMobile.trim(),
+        ...(form.tenantId ? { tenant_id: form.tenantId } : {}),
+      })
+      emit('created')
+      createUserSuccess.value = {
+        username: resp.user.username,
+        email: resp.user.email,
+        generatedPassword: '',
+      }
+      if (resp.idempotent) {
+        emit('announced', t('system.globalSettings.createUser.successIdempotent'))
+      } else {
+        emit('announced', t('system.globalSettings.createUser.dingtalkSuccess'))
+      }
+      return
+    }
 
     const payload: CreateSystemUserRequest = {
       username: form.username.trim(),

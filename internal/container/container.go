@@ -729,6 +729,9 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	}))
 	must(container.Provide(service.NewDocumentProgressService))
 	must(container.Provide(handler.NewSystemHandler))
+	must(container.Invoke(func(h *handler.SystemHandler, svc interfaces.DingTalkAuthService) {
+		h.SetDingTalkProvisioner(svc)
+	}))
 	// Dig resolves exact types; adapt the registered service to the handler's
 	// narrower SharedAgentLookup interface at the composition boundary.
 	must(container.Provide(func(
