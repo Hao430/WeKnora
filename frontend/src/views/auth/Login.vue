@@ -383,14 +383,14 @@ const modules = [Autoplay, EffectFade, Pagination]
 // Carousel slides data
 const slides = [
   {
-    image: loginSlide1,
-    title: t('platform.carousel.agenticRagTitle'),
-    description: t('platform.carousel.agenticRagDesc')
-  },
-  {
     image: loginSlide2,
     title: t('platform.carousel.hybridSearchTitle'),
     description: t('platform.carousel.hybridSearchDesc')
+  },
+  {
+    image: loginSlide1,
+    title: t('platform.carousel.agenticRagTitle'),
+    description: t('platform.carousel.agenticRagDesc')
   },
   {
     image: loginSlide3,
