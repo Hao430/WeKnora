@@ -915,6 +915,7 @@ onMounted(async () => {
 <style lang="less" scoped>
 .login-layout {
   display: flex;
+  flex-direction: column;
   width: 100%;
   min-height: 100%;
   overflow: hidden;
@@ -1143,24 +1144,26 @@ onMounted(async () => {
   }
 }
 
-/* Left Showcase Section */
+/* Top Showcase Section */
 .showcase-section {
-  flex: 0 0 52%;
+  flex: 1 1 auto;
   display: flex;
-  align-items: flex-end;
-  padding: 100px 30px 100px 50px;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 50px 24px;
   box-sizing: border-box;
   position: relative;
 }
 
 .showcase-content {
   width: 100%;
-  max-width: 600px;
+  max-width: 720px;
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  margin-bottom: 60px;
+  align-items: center;
+  text-align: center;
 }
 
 .showcase-subtitle {
@@ -1183,6 +1186,7 @@ onMounted(async () => {
 
 .feature-tags {
   display: flex;
+  justify-content: center;
   gap: 12px;
   margin-bottom: 40px;
   flex-wrap: wrap;
@@ -1255,13 +1259,13 @@ onMounted(async () => {
   object-fit: contain;
 }
 
-/* Right Form Section */
+/* Bottom Form Section */
 .form-section {
-  flex: 0 0 48%;
+  flex: 0 0 auto;
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: center;
-  padding: 112px 50px 100px 30px;
+  padding: 24px 50px 64px;
   box-sizing: border-box;
   position: relative;
 }
@@ -1269,7 +1273,6 @@ onMounted(async () => {
 .form-panel {
   width: 100%;
   max-width: 480px;
-  margin-bottom: 60px;
   position: relative;
   z-index: 2;
 }
