@@ -331,7 +331,7 @@ router.beforeEach(async (to, from, next) => {
       }
     }
     if (authStore.hasValidTenant) {
-      next('/platform/knowledge-bases')
+      next('/platform/creatChat')
     } else {
       next()
     }

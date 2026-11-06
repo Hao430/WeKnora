@@ -128,7 +128,7 @@ const EXTRA_PREFIXES = [
 
 /** Keys that must survive pruning even when static analysis misses them. */
 export const CRITICAL_LOCALE_KEYS = [
-  'newUserGuide.steps.welcome.title',
+  'newUserGuide.steps.kbMention.title',
   'contextualGuide.kbList.steps.create.title',
   'tenantMember.audit.action.rbac.member_added',
   'system.globalSettings.audit.action.system.setting_changed',

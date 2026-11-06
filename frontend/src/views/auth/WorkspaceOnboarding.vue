@@ -105,14 +105,14 @@ onMounted(async () => {
 watch(
   () => authStore.hasValidTenant,
   (ready) => {
-    if (ready) router.replace('/platform/knowledge-bases')
+    if (ready) router.replace('/platform/creatChat')
   },
 )
 
 async function onTenantCreated(tenant: TenantInfo) {
   await authStore.refreshFromAuthMe()
   authStore.setSelectedTenant(tenant.id, tenant.name)
-  await router.replace('/platform/knowledge-bases')
+  await router.replace('/platform/creatChat')
 }
 
 async function handleLogout() {

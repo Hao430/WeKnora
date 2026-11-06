@@ -6,7 +6,6 @@ import DocContent from "@/components/doc-content.vue";
 import useKnowledgeBase from '@/hooks/useKnowledgeBase';
 import { useRoute, useRouter } from 'vue-router';
 import EmptyKnowledge from '@/components/empty-knowledge.vue';
-import ContextualGuide from '@/components/ContextualGuide.vue';
 import KBInfoPopover from '@/components/KBInfoPopover.vue';
 import KBSwitcherDropdown from '@/components/KBSwitcherDropdown.vue';
 import { useUIStore } from '@/stores/ui';
@@ -379,14 +378,6 @@ const canDownloadKnowledge = computed(() => {
 
 const knowledgeList = ref<Array<{ id: string; name: string; type?: string }>>([]);
 let { cardList, total, moreIndex, details, getKnowled, onVisibleChange: _onVisibleChange, getCardDetails, getfDetails } = useKnowledgeBase(kbId.value)
-
-const showKbDetailContextualGuide = computed(() => {
-  return Boolean(kbId.value)
-    && !isFAQ.value
-    && canEdit.value
-    && !docListLoading.value
-    && cardList.value.length === 0;
-});
 
 const onVisibleChange = (visible: boolean) => {
   _onVisibleChange(visible);
@@ -2687,7 +2678,7 @@ const handleKBEditorSuccess = (kbIdValue: string) => {
                   <div v-if="canEdit" class="doc-filter-actions">
                     <KbUploadSourceDropdown ref="uploadSourceRef" :accept-file-types="acceptFileTypes"
                       :supported-file-types="[...supportedFileTypes]" include-manual trigger-icon="add" :trigger-label="t('knowledgeBase.addDocument')"
-                      trigger-class="content-bar-icon-btn" data-guide="kb-detail-add-doc"
+                      trigger-class="content-bar-icon-btn"
                       :tooltip="t('knowledgeBase.addDocument')" placement="bottom-right" @files="handleUploadSourceFiles"
                       @url="handleUploadSourceUrl" @manual="handleManualCreate" />
                   </div>
@@ -2832,8 +2823,6 @@ const handleKBEditorSuccess = (kbIdValue: string) => {
   <KnowledgeBaseEditorModal :visible="uiStore.showKBEditorModal" :mode="uiStore.kbEditorMode"
     :kb-id="uiStore.currentKBId || undefined" :initial-type="uiStore.kbEditorType"
     @update:visible="(val) => val ? null : uiStore.closeKBEditor()" @success="handleKBEditorSuccess" />
-
-  <ContextualGuide tour="kbDetail" :when="showKbDetailContextualGuide" />
 
   <!-- 批量打标签弹窗 -->
   <BatchTagDialog @tags-changed="onTagCatalogChanged" :visible="batchTagDialogVisible"

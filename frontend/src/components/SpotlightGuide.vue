@@ -13,11 +13,7 @@
 
         <div v-if="hole" class="guide__ring" :style="ringStyle" aria-hidden="true" />
 
-        <div ref="cardRef" class="guide__card" :class="{ 'guide__card--center': !hole }" :style="cardStyle">
-          <button type="button" class="guide__close" :aria-label="t(`${labelsPrefix}.skip`)" @click="dismiss">
-            <t-icon name="close" size="18px" />
-          </button>
-
+        <div ref="cardRef" class="guide__tip" :class="{ 'guide__tip--center': !hole }" :style="cardStyle">
           <div class="guide__progress">
             <span v-for="(s, i) in steps" :key="s.key" class="guide__dot"
               :class="{ 'is-active': i === index, 'is-done': i < index }" />
@@ -32,15 +28,15 @@
           <div class="guide__actions">
             <button type="button" class="guide__skip" @click="dismiss">{{ t(`${labelsPrefix}.skip`) }}</button>
             <div v-if="!step.interact" class="guide__actions-main">
-              <t-button v-if="index > 0" size="small" variant="outline" @click="prev">
+              <button v-if="index > 0" type="button" class="guide__btn guide__btn--ghost" @click="prev">
                 {{ t(`${labelsPrefix}.prev`) }}
-              </t-button>
-              <t-button v-if="!isLast" size="small" theme="primary" @click="next">
+              </button>
+              <button v-if="!isLast" type="button" class="guide__btn guide__btn--primary" @click="next">
                 {{ t(`${labelsPrefix}.next`) }}
-              </t-button>
-              <t-button v-else size="small" theme="primary" @click="finish">
+              </button>
+              <button v-else type="button" class="guide__btn guide__btn--primary" @click="finish">
                 {{ t(`${labelsPrefix}.done`) }}
-              </t-button>
+              </button>
             </div>
           </div>
         </div>
@@ -59,7 +55,7 @@ const GAP = 16
 const EDGE = 16
 const PAD = 8
 const holeRadius = 8
-const BACKDROP_COLOR = 'rgba(15, 18, 22, 0.58)'
+const BACKDROP_COLOR = 'rgba(10, 12, 16, 0.82)'
 
 const props = withDefaults(
   defineProps<{
@@ -451,19 +447,15 @@ defineExpose({ open, close })
     height 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.guide__card {
+.guide__tip {
   position: fixed;
   z-index: 1;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 18px 18px 14px;
-  border-radius: 14px;
-  background: var(--td-bg-color-container);
-  border: 1px solid var(--td-component-stroke);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.18);
-  color: var(--td-text-color-primary);
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
   max-height: calc(100vh - 32px);
   overflow-y: auto;
   transition:
@@ -472,28 +464,6 @@ defineExpose({ open, close })
 
   &--center {
     max-width: calc(100vw - 32px);
-  }
-}
-
-.guide__close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: var(--app-radius-md);
-  background: transparent;
-  color: var(--td-text-color-secondary);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--td-bg-color-container-hover);
-    color: var(--td-text-color-primary);
   }
 }
 
@@ -506,29 +476,28 @@ defineExpose({ open, close })
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--td-bg-color-component);
+  background: rgba(255, 255, 255, 0.35);
   transition: width var(--app-motion-base) ease, background var(--app-motion-base) ease;
 
   &.is-active {
     width: 16px;
     border-radius: var(--app-radius-pill);
-    background: var(--td-brand-color);
+    background: #fff;
   }
 
   &.is-done {
-    background: color-mix(in srgb, var(--td-brand-color) 40%, transparent);
+    background: rgba(255, 255, 255, 0.6);
   }
 }
 
 .guide__step-label {
   margin: 6px 0 0;
   font-size: var(--app-text-sm);
-  color: var(--td-text-color-placeholder);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .guide__title {
   margin: 0;
-  padding-right: 24px;
   font-size: var(--app-text-2xl);
   font-weight: 600;
   line-height: 26px;
@@ -538,15 +507,15 @@ defineExpose({ open, close })
   margin: 0;
   font-size: var(--app-text-base);
   line-height: 22px;
-  color: var(--td-text-color-secondary);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .guide__interact-hint {
   margin: 0;
   font-size: var(--app-text-md);
   line-height: 20px;
-  color: var(--td-brand-color);
-  font-weight: 500;
+  color: #fff;
+  font-weight: 600;
 }
 
 .guide__actions {
@@ -555,20 +524,47 @@ defineExpose({ open, close })
   justify-content: space-between;
   gap: 8px;
   margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px solid var(--td-component-stroke);
 }
 
 .guide__skip {
+  flex-shrink: 0;
   border: none;
   background: transparent;
   padding: 0;
   font-size: var(--app-text-md);
-  color: var(--td-text-color-placeholder);
+  color: rgba(255, 255, 255, 0.75);
   cursor: pointer;
 
   &:hover {
-    color: var(--td-text-color-secondary);
+    color: #fff;
+  }
+}
+
+.guide__btn {
+  padding: 6px 16px;
+  border-radius: var(--app-radius-md);
+  font-size: var(--app-text-md);
+  cursor: pointer;
+  transition: background var(--app-motion-base) ease;
+
+  &--ghost {
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: transparent;
+    color: #fff;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+  }
+
+  &--primary {
+    border: none;
+    background: var(--td-brand-color);
+    color: #fff;
+
+    &:hover {
+      background: color-mix(in srgb, var(--td-brand-color) 85%, #fff);
+    }
   }
 }
 
@@ -588,7 +584,7 @@ defineExpose({ open, close })
 }
 
 @media (max-width: 720px) {
-  .guide__card {
+  .guide__tip {
     left: 16px !important;
     right: 16px;
     width: auto !important;

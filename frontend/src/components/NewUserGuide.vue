@@ -1,100 +1,52 @@
 <template>
   <SpotlightGuide v-model:active="active" :steps="steps" step-i18n-prefix="newUserGuide.steps"
-    :labels-prefix="assistantOnly ? 'assistantEntryGuide' : 'newUserGuide'"
-    @finish="onFinish" @step-change="onStepChange" />
+    @finish="onFinish" />
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import SpotlightGuide from '@/components/SpotlightGuide.vue'
 import {
-  ASSISTANT_ENTRY_GUIDE_KEY,
   GLOBAL_USER_GUIDE_KEY,
   OPEN_NEW_USER_GUIDE_EVENT,
   isGlobalUserGuideDone,
+  markContextualGuideDone,
 } from '@/config/contextualGuides'
-import { useAssistantStore } from '@/stores/assistant'
-import { useUIStore } from '@/stores/ui'
 import type { SpotlightGuideStep } from '@/types/spotlightGuide'
 
-const uiStore = useUIStore()
-const assistant = useAssistantStore()
+const router = useRouter()
 const active = ref(false)
-const assistantOnly = ref(false)
 let openTimer: ReturnType<typeof setTimeout> | null = null
-let settingsOpenedByGuide = false
 
-const assistantStep = computed<SpotlightGuideStep>(() => ({
-  key: 'assistant',
-  target: '[data-guide="assistant-entry"]',
-  placement: assistant.entry === 'launcher' ? 'left' : 'right',
-  interact: assistantOnly.value,
-  optional: !assistantOnly.value,
-}))
-
-const steps = computed<SpotlightGuideStep[]>(() => assistantOnly.value ? [assistantStep.value] : [
-  { key: 'welcome' },
-  ...(assistant.entry !== 'palette' ? [assistantStep.value] : []),
+const steps = computed<SpotlightGuideStep[]>(() => [
   {
-    key: 'knowledge',
-    target: '[data-guide="nav-knowledge-bases"]',
+    key: 'sidebar',
+    target: '[data-guide="sidebar-toggle"]',
     placement: 'right',
-    before: () => uiStore.expandSidebar(),
   },
   {
-    key: 'agents',
-    target: '[data-guide="nav-agents"]',
-    placement: 'right',
-    optional: true,
-    before: () => uiStore.expandSidebar(),
+    key: 'kbMention',
+    target: '[data-guide="chat-kb-mention"]',
+    placement: 'top',
+    before: async () => { await router.push('/platform/creatChat') },
   },
   {
-    key: 'chat',
-    target: '[data-guide="nav-creatChat"]',
-    placement: 'right',
-    before: () => uiStore.expandSidebar(),
+    key: 'attachment',
+    target: '[data-guide="chat-attachment"]',
+    placement: 'top',
   },
-  {
-    key: 'settings',
-    target: '[data-guide="user-menu"]',
-    placement: 'right',
-    before: () => uiStore.expandSidebar(),
-  },
-  {
-    key: 'models',
-    target: '[data-guide="settings-add-model"], [data-guide="settings-models"]',
-    placement: 'left',
-    before: () => {
-      uiStore.openSettings('models')
-      settingsOpenedByGuide = true
-    },
-  },
-  { key: 'done' },
 ])
-
-const closeGuideSettings = () => {
-  if (settingsOpenedByGuide) {
-    uiStore.closeSettings()
-    settingsOpenedByGuide = false
-  }
-}
 
 const onFinish = () => {
   localStorage.setItem(GLOBAL_USER_GUIDE_KEY, '1')
-  localStorage.setItem(ASSISTANT_ENTRY_GUIDE_KEY, '1')
-  closeGuideSettings()
-}
-
-const onStepChange = ({ toKey }: { toKey: string }) => {
-  if (toKey !== 'models') {
-    closeGuideSettings()
-  }
+  // 引导已在对话页覆盖 @ 选择知识库等要点，避免情境引导紧接着再次弹出
+  markContextualGuideDone('chat')
 }
 
 const handleOpenEvent = () => {
   if (active.value) return
   if (openTimer) clearTimeout(openTimer)
-  assistantOnly.value = false
   active.value = true
 }
 
@@ -103,33 +55,12 @@ const scheduleAutoGuide = () => {
   openTimer = null
   if (active.value || isGlobalUserGuideDone()) return
 
-  const upgrading = localStorage.getItem(GLOBAL_USER_GUIDE_KEY) === '1'
-  if (upgrading && (assistant.visible || assistant.entry === 'palette')) {
-    // The user has already opened the assistant, or chose to hide its entry.
-    localStorage.setItem(ASSISTANT_ENTRY_GUIDE_KEY, '1')
-    return
-  }
-  if (uiStore.showSettingsModal) return
-
   openTimer = setTimeout(() => {
     openTimer = null
     if (active.value || isGlobalUserGuideDone()) return
-    assistantOnly.value = upgrading
     active.value = true
   }, 700)
 }
-
-watch(
-  () => [assistant.visible, assistant.entry, uiStore.showSettingsModal],
-  () => {
-    if (active.value && assistantOnly.value && (assistant.visible || assistant.entry === 'palette')) {
-      active.value = false
-      onFinish()
-      return
-    }
-    scheduleAutoGuide()
-  },
-)
 
 onMounted(() => {
   window.addEventListener(OPEN_NEW_USER_GUIDE_EVENT, handleOpenEvent)
@@ -139,6 +70,5 @@ onMounted(() => {
 onBeforeUnmount(() => {
   if (openTimer) clearTimeout(openTimer)
   window.removeEventListener(OPEN_NEW_USER_GUIDE_EVENT, handleOpenEvent)
-  closeGuideSettings()
 })
 </script>

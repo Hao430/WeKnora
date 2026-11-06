@@ -3145,7 +3145,7 @@ defineExpose({
                 count: uploadedAttachments.length
               }) : $t('chat.attachmentUploadTooltip') }}</span>
             </template>
-            <div class="control-btn attachment-upload-btn" :class="{ 'active': uploadedAttachments.length > 0 }"
+            <div class="control-btn attachment-upload-btn" data-guide="chat-attachment" :class="{ 'active': uploadedAttachments.length > 0 }"
               @click.stop="attachmentUploadRef?.triggerFileSelect()">
               <!-- 回形针图标 -->
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"

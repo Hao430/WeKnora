@@ -663,11 +663,6 @@ export default {
       references: 'References'
     }
   },
-  assistantEntryGuide: {
-    stepOf: 'NEW IN v0.9.0',
-    skip: 'Got it',
-    interactHint: 'Click the highlighted entry to open the assistant.',
-  },
   newUserGuide: {
     stepOf: '{current} / {total}',
     skip: 'Skip',
@@ -676,39 +671,18 @@ export default {
     done: 'Done',
     reopen: 'Product tour',
     steps: {
-      assistant: {
-        title: 'Meet the 建工·知库 Assistant',
-        desc: 'Ask about 建工·知库 versions, features and setup. Using the current page as context, the assistant can create agents, schedule tasks and organize knowledge on your behalf, within your permissions.'
+      sidebar: {
+        title: 'Collapse or expand the sidebar',
+        desc: 'Click here to collapse the sidebar for a wider content area; click again to expand it.'
       },
-      welcome: {
-        title: 'Welcome to 建工·知库',
-        desc: 'A few quick steps to get you familiar with knowledge bases, chat and agents. Click "Next" to begin.'
+      kbMention: {
+        title: 'Limit the knowledge base',
+        desc: 'Click the {\'@\'} icon to pick the knowledge bases or files for this conversation, and the AI will answer based on them.'
       },
-      knowledge: {
-        title: 'Create your knowledge base',
-        desc: 'Everything starts here: upload documents, web pages or FAQs and 建工·知库 parses and indexes them automatically. Click here to open knowledge bases.'
-      },
-      chat: {
-        title: 'Start an AI chat',
-        desc: 'Ask questions grounded in your knowledge base and get accurate answers with cited sources. Click here to start a new chat.'
-      },
-      agents: {
-        title: 'Build dedicated agents',
-        desc: 'Combine knowledge bases, prompts and tools into reusable agents that capture your expertise.'
-      },
-      settings: {
-        title: 'Account & settings',
-        desc: 'Open this to manage your account, members and system settings. You can reopen this tour from the help button next to your name at the top of this menu.'
-      },
-      models: {
-        title: 'Configure your models',
-        desc: 'A key step: add chat, embedding and other models in Model Management so knowledge bases and chat can work. Click "Add model" to get started.'
-      },
-      done: {
-        title: 'You are all set',
-        desc: 'You now know the essentials — start building your knowledge assistant! Revisit this tour anytime from the help button next to your name in this menu.'
-      }
-    }
+      attachment: {
+        title: 'Upload attachments',
+        desc: 'Click the paperclip icon to attach documents; the AI parses them and answers with their content.'
+      }    }
   },
   contextualGuide: {
     stepOf: '{current} / {total}',
