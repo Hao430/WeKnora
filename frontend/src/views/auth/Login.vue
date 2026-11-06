@@ -235,21 +235,6 @@
               {{ oidcLoading ? $t('auth.redirectingToOIDC') : oidcLoginText }}
             </t-button>
 
-            <!-- Features list -->
-            <div class="login-features">
-              <div class="feature-item">
-                <span class="feature-icon">✓</span>
-                <span class="feature-text">{{ $t('platform.multimodalParsing') }}</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">✓</span>
-                <span class="feature-text">{{ $t('platform.hybridSearchEngine') }}</span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">✓</span>
-                <span class="feature-text">{{ $t('platform.ragQandA') }}</span>
-              </div>
-            </div>
           </div>
         </div>
 
