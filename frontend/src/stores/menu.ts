@@ -31,11 +31,11 @@ export const useMenuStore = defineStore('menuStore', () => {
       children: createMenuChildren()
     },
     { title: '', titleKey: 'menu.knowledgeBase', icon: 'zhishiku', path: 'knowledge-bases' },
-    // Artifacts only exist where skills run in a sandbox.
-    { title: '', titleKey: 'menu.artifacts', icon: 'artifact', path: 'artifacts', requiredCapability: 'settings.sandbox' },
+    // 产物/自动化/工具箱入口暂时隐藏，后续可能重新开放
+    // { title: '', titleKey: 'menu.artifacts', icon: 'artifact', path: 'artifacts', requiredCapability: 'settings.sandbox' },
     { title: '', titleKey: 'menu.agents', icon: 'agent', path: 'agents', requiredCapability: 'agents' },
-    { title: '', titleKey: 'menu.automations', icon: 'automation', path: 'automations' },
-    { title: '', titleKey: 'toolbox.title', icon: 'toolbox', path: 'toolbox' },
+    // { title: '', titleKey: 'menu.automations', icon: 'automation', path: 'automations' },
+    // { title: '', titleKey: 'toolbox.title', icon: 'toolbox', path: 'toolbox' },
     { title: '', titleKey: 'menu.organizations', icon: 'organization', path: 'organizations', requiredCapability: 'organizations' },
     { title: '', titleKey: 'menu.feedback', icon: 'feedback', path: 'feedback' },
     { title: '', titleKey: 'menu.settings', icon: 'setting', path: 'settings' },

@@ -620,7 +620,7 @@ const persistLoginResponse = async (response: any, skipRedirect = false) => {
   await authStore.refreshFromAuthMe()
   await nextTick()
   if (skipRedirect) return
-  router.replace(authStore.hasValidTenant ? '/platform/knowledge-bases' : '/onboarding/workspace')
+  router.replace(authStore.hasValidTenant ? '/platform/creatChat' : '/onboarding/workspace')
 }
 
 const getBackendOIDCRedirectURI = () => `${window.location.origin}${getApiBaseUrl()}/api/v1/auth/oidc/callback`
@@ -743,7 +743,7 @@ const acceptAndEnter = async (token: string) => {
   } finally {
     loading.value = false
     await nextTick()
-    router.replace('/platform/knowledge-bases')
+    router.replace('/platform/creatChat')
   }
 }
 
@@ -887,7 +887,7 @@ onMounted(async () => {
   }
 
   if (authStore.isLoggedIn) {
-    router.replace('/platform/knowledge-bases')
+    router.replace('/platform/creatChat')
     return
   }
 
