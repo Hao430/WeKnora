@@ -219,11 +219,19 @@
             <UserMenu />
         </div>
 
-        <!-- 问题反馈弹窗：展示二维码 -->
-        <t-dialog v-model:visible="showFeedbackDialog" :header="t('menu.feedback')" :footer="false" width="360px">
+        <!-- 问题反馈弹窗：两个二维码 + 电脑端链接 -->
+        <t-dialog v-model:visible="showFeedbackDialog" :header="t('menu.feedback')" :footer="false" width="480px">
             <div class="feedback-qrcode-box">
-                <img class="feedback-qrcode" :src="feedbackQrcode" alt="反馈二维码">
+                <div class="feedback-qrcode-item">
+                    <div class="feedback-qrcode-title">问题反馈</div>
+                    <img class="feedback-qrcode" :src="feedbackQrcode" alt="问题反馈二维码">
+                </div>
+                <div class="feedback-qrcode-item">
+                    <div class="feedback-qrcode-title">扫码加群沟通</div>
+                    <img class="feedback-qrcode" :src="feedbackGroupQrcode" alt="扫码加群沟通二维码">
+                </div>
             </div>
+            <div class="feedback-pc-link">电脑端：<a :href="FEEDBACK_FORM_URL" target="_blank" rel="noopener,noreferrer">{{ FEEDBACK_FORM_URL }}</a></div>
         </t-dialog>
     </div>
 </template>
@@ -312,6 +320,8 @@ import mattermostLogo from '@/assets/img/im/mattermost.svg';
 import wechatLogo from '@/assets/img/im/wechat.svg';
 import qqbotLogo from '@/assets/img/im/qqbot.png';
 import feedbackQrcode from '@/assets/img/feedback-qrcode.png';
+import feedbackGroupQrcode from '@/assets/img/feedback-group-qrcode.png';
+import { FEEDBACK_FORM_URL } from '@/config/feedback';
 const showFeedbackDialog = ref(false);
 
 const PLATFORM_LOGO: Record<string, string> = {
@@ -2026,10 +2036,29 @@ const resizeSidebar = (delta: number, keyboard: boolean) => {
 .feedback-qrcode-box {
     display: flex;
     justify-content: center;
+    gap: 24px;
+
+    .feedback-qrcode-title {
+        text-align: center;
+        font-weight: 500;
+        margin-bottom: 8px;
+    }
 
     .feedback-qrcode {
-        width: 260px;
-        height: 260px;
+        display: block;
+        width: 180px;
+        height: 180px;
+    }
+}
+
+.feedback-pc-link {
+    margin-top: 16px;
+    text-align: center;
+    font-size: 13px;
+    word-break: break-all;
+
+    a {
+        color: var(--td-brand-color);
     }
 }
 </style>

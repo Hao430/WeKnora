@@ -9374,7 +9374,7 @@ export default {
     artifacts: '产物',
     organizations: '共享空间',
     newChat: '新对话',
-    feedback: '知识库反馈',
+    feedback: '问题反馈',
     settings: '系统设置',
     logout: '退出登录',
     clearMessages: '清空消息',
