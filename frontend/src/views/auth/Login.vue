@@ -127,9 +127,10 @@
           <span class="tag">{{ $t('platform.wiki') }}</span>
           <span class="tag">{{ $t('platform.hybridSearch') }}</span>
         </div>
+      </div>
 
-        <!-- Swiper Carousel -->
-        <div class="carousel-container">
+      <!-- Swiper Carousel -->
+      <div class="carousel-container">
           <swiper :modules="modules" :slides-per-view="1" :loop="true" :autoplay="{
             delay: 4000,
             disableOnInteraction: false,
@@ -141,11 +142,10 @@
               </div>
             </swiper-slide>
           </swiper>
-        </div>
       </div>
     </div>
 
-    <!-- Right Form Section -->
+    <!-- Bottom Form Section -->
     <div class="form-section">
       <div class="form-panel">
         <!-- Login Card -->
@@ -1131,24 +1131,26 @@ onMounted(async () => {
 
 /* Top Showcase Section */
 .showcase-section {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 100px 50px 24px;
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(0, 720px) minmax(280px, 1fr);
+  column-gap: 48px;
+  align-items: start;
+  padding: 124px 50px 24px;
   box-sizing: border-box;
   position: relative;
 }
 
 .showcase-content {
+  grid-column: 1;
   width: 100%;
-  max-width: 720px;
+  max-width: 400px;
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .showcase-subtitle {
@@ -1171,7 +1173,6 @@ onMounted(async () => {
 
 .feature-tags {
   display: flex;
-  justify-content: center;
   gap: 12px;
   margin-bottom: 40px;
   flex-wrap: wrap;
@@ -1190,12 +1191,14 @@ onMounted(async () => {
 
 /* Carousel */
 .carousel-container {
-  width: 100%;
-  margin-top: 48px;
+  grid-column: 2;
+  display: flex;
+  justify-content: center;
 }
 
 .screenshot-swiper {
   width: 100%;
+  max-width: 720px;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -1229,7 +1232,7 @@ onMounted(async () => {
 .slide-content {
   width: 100%;
   height: 100%;
-  background: var(--td-bg-color-container);
+  background: transparent;
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -1257,7 +1260,7 @@ onMounted(async () => {
 
 .form-panel {
   width: 100%;
-  max-width: 480px;
+  max-width: 720px;
   position: relative;
   z-index: 2;
 }
@@ -1705,6 +1708,26 @@ onMounted(async () => {
 }
 
 /* Responsive Design */
+@media (max-width: 1280px) {
+  .showcase-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    padding-top: 110px;
+  }
+
+  .showcase-content {
+    max-width: 720px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .feature-tags {
+    justify-content: center;
+  }
+}
+
 @media (max-width: 1024px) {
   .knowledge-node:nth-of-type(n + 13) {
     display: none;
