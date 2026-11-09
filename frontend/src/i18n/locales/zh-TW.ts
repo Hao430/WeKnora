@@ -9232,17 +9232,13 @@ export default {
     done: '完成',
     reopen: '新手引導',
     steps: {
-      sidebar: {
-        title: '收合或展開側邊欄',
-        desc: '點擊此處可收合側邊欄，讓內容區域更寬敞；再次點擊即可展開。'
-      },
-      kbMention: {
-        title: '選擇限定知識庫',
-        desc: '點擊 {\'@\'} 圖示，選擇本次對話要限定的知識庫或檔案，AI 將優先根據所選內容作答。'
-      },
-      attachment: {
-        title: '上傳附件',
-        desc: '點擊迴紋針圖示上傳文件，AI 會解析附件內容並結合你的問題作答。'
+      overview: {
+        title: '快速上手',
+        items: {
+          sidebar: '收合或展開側邊欄',
+          kb: '點擊限定本次對話使用的知識庫（可多選），預設查詢全部知識庫',
+          attach: '上傳附件，供 AI 參考'
+        }
       }    }
   },
   chatHeader: {

@@ -26,10 +26,13 @@ test('new users get the simplified tour: sidebar plus the chat composer steps', 
   t.mock.timers.tick(700)
   await flush()
   assert.equal(vm.active, true)
-  assert.deepEqual(Array.from(vm.steps, (s: any) => s.key), ['sidebar', 'kbMention', 'attachment'])
-  assert.equal(vm.steps[0].target, '[data-guide="sidebar-toggle"]')
-  assert.equal(vm.steps[1].target, '[data-guide="chat-kb-mention"]')
-  assert.equal(vm.steps[2].target, '[data-guide="chat-attachment"]')
+  assert.deepEqual(Array.from(vm.steps, (s: any) => s.key), ['overview'])
+  assert.deepEqual(Array.from(vm.steps[0].targets, (t: any) => t.selector), [
+    '[data-guide="sidebar-toggle"]',
+    '[data-guide="chat-kb-mention"]',
+    '[data-guide="chat-attachment"]',
+  ])
+  assert.deepEqual(Array.from(vm.steps[0].targets, (t: any) => t.itemKey), ['sidebar', 'kb', 'attach'])
 })
 
 test('finishing the tour marks both done keys and the chat page tour', async t => {

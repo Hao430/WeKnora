@@ -20,21 +20,15 @@ const active = ref(false)
 let openTimer: ReturnType<typeof setTimeout> | null = null
 
 const steps = computed<SpotlightGuideStep[]>(() => [
+  // 单步三洞同屏：侧边栏切换 + @ 知识库 + 上传附件，每洞旁独立文案
   {
-    key: 'sidebar',
-    target: '[data-guide="sidebar-toggle"]',
-    placement: 'right',
-  },
-  {
-    key: 'kbMention',
-    target: '[data-guide="chat-kb-mention"]',
-    placement: 'top',
+    key: 'overview',
+    targets: [
+      { selector: '[data-guide="sidebar-toggle"]', itemKey: 'sidebar', placement: 'right' },
+      { selector: '[data-guide="chat-kb-mention"]', itemKey: 'kb', placement: 'top' },
+      { selector: '[data-guide="chat-attachment"]', itemKey: 'attach', placement: 'bottom' },
+    ],
     before: async () => { await router.push('/platform/creatChat') },
-  },
-  {
-    key: 'attachment',
-    target: '[data-guide="chat-attachment"]',
-    placement: 'top',
   },
 ])
 

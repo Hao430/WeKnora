@@ -9239,17 +9239,13 @@ export default {
     done: '完成',
     reopen: '新手引导',
     steps: {
-      sidebar: {
-        title: '收起或展开侧边栏',
-        desc: '点击此处可收起侧边栏，让内容区域更宽敞；再次点击即可展开。'
-      },
-      kbMention: {
-        title: '选择限定知识库',
-        desc: '点击 {\'@\'} 图标，选择本次对话要限定的知识库或文件，AI 将优先基于所选内容作答。'
-      },
-      attachment: {
-        title: '上传附件',
-        desc: '点击回形针图标上传文档，文件，图片，AI 会解析附件内容并结合你的问题作答。'
+      overview: {
+        title: '快速上手',
+        items: {
+          sidebar: '收起或展开侧边栏',
+          kb: '点击限定本次对话使用的知识库（可多选），默认查全部知识库',
+          attach: '上传附件，用于AI参考'
+        }
       }    }
   },
   chatHeader: {

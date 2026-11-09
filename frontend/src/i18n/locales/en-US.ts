@@ -671,17 +671,13 @@ export default {
     done: 'Done',
     reopen: 'Product tour',
     steps: {
-      sidebar: {
-        title: 'Collapse or expand the sidebar',
-        desc: 'Click here to collapse the sidebar for a wider content area; click again to expand it.'
-      },
-      kbMention: {
-        title: 'Limit the knowledge base',
-        desc: 'Click the {\'@\'} icon to pick the knowledge bases or files for this conversation, and the AI will answer based on them.'
-      },
-      attachment: {
-        title: 'Upload attachments',
-        desc: 'Click the paperclip icon to attach documents; the AI parses them and answers with their content.'
+      overview: {
+        title: 'Quick start',
+        items: {
+          sidebar: 'Collapse or expand the sidebar',
+          kb: 'Limit the knowledge bases for this conversation (multi-select); all are searched by default',
+          attach: 'Attach documents for the AI to reference'
+        }
       }    }
   },
   contextualGuide: {

@@ -4,22 +4,52 @@
       <div v-if="active" class="guide" role="dialog" aria-modal="true" :aria-label="stepTitle"
         @keydown.esc.prevent="dismiss" @keydown.left.prevent="prev" @keydown.right.prevent="next" tabindex="-1"
         ref="rootRef">
-        <template v-if="hole">
+        <template v-if="isMultiHole">
+          <svg class="guide__svg" :width="vw" :height="vh" aria-hidden="true">
+            <defs>
+              <mask :id="maskId">
+                <rect :width="vw" :height="vh" fill="white" />
+                <rect v-for="(h, i) in holes" :key="i" :x="h.x" :y="h.y" :width="h.width" :height="h.height"
+                  :rx="holeRadius" fill="black" />
+              </mask>
+            </defs>
+            <rect :width="vw" :height="vh" :fill="BACKDROP_COLOR" :mask="`url(#${maskId})`" />
+          </svg>
+          <template v-for="(h, i) in holes" :key="'b' + i">
+            <div v-for="(piece, j) in piecesFor(h)" :key="j" class="guide__backdrop guide__backdrop--hit"
+              :style="piece" />
+          </template>
+          <div v-for="(h, i) in holes" :key="'r' + i" class="guide__ring" :style="ringStyleFor(h)" aria-hidden="true" />
+
+          <h3 class="guide__title guide__title--floating">{{ t(`${stepI18nPrefix}.${step.key}.title`) }}</h3>
+          <div v-for="(h, i) in holes" :key="'t' + i" class="guide__tip guide__tip--item" :style="itemTipStyle(i)">
+            {{ itemText(i) }}
+          </div>
+          <div class="guide__actions guide__actions--floating">
+            <button type="button" class="guide__skip" @click="dismiss">{{ t(`${labelsPrefix}.skip`) }}</button>
+            <button type="button" class="guide__btn guide__btn--primary" @click="finish">
+              {{ t(`${labelsPrefix}.done`) }}
+            </button>
+          </div>
+        </template>
+        <template v-else-if="hole">
           <div class="guide__spot" :style="spotStyle" aria-hidden="true" />
           <div v-for="(piece, i) in backdropPieces" :key="i" class="guide__backdrop guide__backdrop--hit"
             :style="piece" />
         </template>
         <div v-else class="guide__backdrop guide__backdrop--full" />
 
-        <div v-if="hole" class="guide__ring" :style="ringStyle" aria-hidden="true" />
+        <div v-if="hole && !isMultiHole" class="guide__ring" :style="ringStyle" aria-hidden="true" />
 
-        <div ref="cardRef" class="guide__tip" :class="{ 'guide__tip--center': !hole }" :style="cardStyle">
-          <div class="guide__progress">
+        <div v-if="!isMultiHole" ref="cardRef" class="guide__tip" :class="{ 'guide__tip--center': holes.length !== 1 }"
+          :style="cardStyle">
+          <div v-if="!isMultiHole" class="guide__progress">
             <span v-for="(s, i) in steps" :key="s.key" class="guide__dot"
               :class="{ 'is-active': i === index, 'is-done': i < index }" />
           </div>
 
-          <p class="guide__step-label">{{ t(`${labelsPrefix}.stepOf`, { current: index + 1, total: steps.length }) }}
+          <p v-if="!isMultiHole" class="guide__step-label">{{ t(`${labelsPrefix}.stepOf`, { current: index + 1, total:
+            steps.length }) }}
           </p>
           <h3 class="guide__title">{{ stepTitle }}</h3>
           <p class="guide__desc">{{ stepDesc }}</p>
@@ -27,7 +57,7 @@
 
           <div class="guide__actions">
             <button type="button" class="guide__skip" @click="dismiss">{{ t(`${labelsPrefix}.skip`) }}</button>
-            <div v-if="!step.interact" class="guide__actions-main">
+            <div v-if="!step.interact && !isMultiHole" class="guide__actions-main">
               <button v-if="index > 0" type="button" class="guide__btn guide__btn--ghost" @click="prev">
                 {{ t(`${labelsPrefix}.prev`) }}
               </button>
@@ -48,7 +78,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { SpotlightGuideStep } from '@/types/spotlightGuide'
+import type { SpotlightGuideStep, SpotlightGuideTargetItem } from '@/types/spotlightGuide'
 
 const CARD_WIDTH = 340
 const GAP = 16
@@ -86,9 +116,11 @@ const { t } = useI18n()
 const index = ref(0)
 const vw = ref(window.innerWidth)
 const vh = ref(window.innerHeight)
-const targetRect = ref<DOMRect | null>(null)
-const targetEl = ref<HTMLElement | null>(null)
+const targetRects = ref<DOMRect[]>([])
+const targetEls = ref<HTMLElement[]>([])
+const matchedItems = ref<SpotlightGuideTargetItem[]>([])
 const cardSize = ref({ width: CARD_WIDTH, height: 220 })
+const maskId = `guide-mask-${Math.random().toString(36).slice(2, 8)}`
 
 type HoleRect = { x: number; y: number; width: number; height: number }
 
@@ -150,16 +182,13 @@ const isLast = computed(() => index.value === props.steps.length - 1)
 const stepTitle = computed(() => t(`${props.stepI18nPrefix}.${step.value.key}.title`))
 const stepDesc = computed(() => t(`${props.stepI18nPrefix}.${step.value.key}.desc`))
 
-const hole = computed(() => {
-  const el = targetEl.value
-  const r = targetRect.value
-  if (!el || !r) return null
-  return computeHighlightHole(el, r)
-})
+const holes = computed<HoleRect[]>(() =>
+  targetEls.value.map((el, i) => computeHighlightHole(el, targetRects.value[i])),
+)
+const hole = computed(() => holes.value[0] ?? null)
+const isMultiHole = computed(() => holes.value.length > 1)
 
-const backdropPieces = computed(() => {
-  const h = hole.value
-  if (!h) return []
+const piecesFor = (h: HoleRect) => {
   const w = vw.value
   const v = vh.value
   return [
@@ -178,18 +207,19 @@ const backdropPieces = computed(() => {
       height: `${h.height}px`,
     },
   ]
+}
+
+const ringStyleFor = (h: HoleRect) => ({
+  left: `${h.x}px`,
+  top: `${h.y}px`,
+  width: `${h.width}px`,
+  height: `${h.height}px`,
+  borderRadius: `${holeRadius}px`,
 })
 
-const holeFrameStyle = computed(() => {
-  if (!hole.value) return {}
-  return {
-    left: `${hole.value.x}px`,
-    top: `${hole.value.y}px`,
-    width: `${hole.value.width}px`,
-    height: `${hole.value.height}px`,
-    borderRadius: `${holeRadius}px`,
-  }
-})
+const backdropPieces = computed(() => (hole.value ? piecesFor(hole.value) : []))
+
+const holeFrameStyle = computed(() => (hole.value ? ringStyleFor(hole.value) : {}))
 
 const spotStyle = computed(() => ({
   ...holeFrameStyle.value,
@@ -203,32 +233,22 @@ const overlaps = (
   b: { left: number; top: number; right: number; bottom: number },
 ) => !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom)
 
-const cardStyle = computed(() => {
-  const w = Math.min(CARD_WIDTH, vw.value - EDGE * 2)
-  const h = cardSize.value.height
-  const h0 = hole.value
+type Placement = 'right' | 'left' | 'bottom' | 'top'
 
-  if (!h0) {
-    return {
-      width: `${w}px`,
-      left: `${(vw.value - w) / 2}px`,
-      top: `${Math.max(EDGE, vh.value * 0.32 - h / 2)}px`,
-    }
-  }
-
-  const holeBox = { left: h0.x, top: h0.y, right: h0.x + h0.width, bottom: h0.y + h0.height }
-  type Placement = 'right' | 'left' | 'bottom' | 'top'
-  const order: Placement[] = (() => {
-    const pref = step.value.placement ?? 'right'
-    const all: Placement[] = ['right', 'left', 'bottom', 'top']
-    return [pref, ...all.filter((p) => p !== pref)]
-  })()
+const placeTipNear = (
+  holeBox: { left: number; top: number; right: number; bottom: number; width: number; height: number },
+  w: number,
+  h: number,
+  pref: Placement,
+) => {
+  const all: Placement[] = ['right', 'left', 'bottom', 'top']
+  const order: Placement[] = [pref, ...all.filter((p) => p !== pref)]
 
   const candidates: Record<Placement, { left: number; top: number }> = {
-    right: { left: holeBox.right + GAP, top: h0.y + h0.height / 2 - h / 2 },
-    left: { left: holeBox.left - w - GAP, top: h0.y + h0.height / 2 - h / 2 },
-    bottom: { left: h0.x + h0.width / 2 - w / 2, top: holeBox.bottom + GAP },
-    top: { left: h0.x + h0.width / 2 - w / 2, top: holeBox.top - h - GAP },
+    right: { left: holeBox.right + GAP, top: holeBox.top + holeBox.height / 2 - h / 2 },
+    left: { left: holeBox.left - w - GAP, top: holeBox.top + holeBox.height / 2 - h / 2 },
+    bottom: { left: holeBox.left + holeBox.width / 2 - w / 2, top: holeBox.bottom + GAP },
+    top: { left: holeBox.left + holeBox.width / 2 - w / 2, top: holeBox.top - h - GAP },
   }
 
   for (const place of order) {
@@ -244,6 +264,56 @@ const cardStyle = computed(() => {
   const left = Math.min(Math.max(EDGE, (vw.value - w) / 2), vw.value - w - EDGE)
   const top = Math.min(Math.max(EDGE, holeBox.bottom + GAP), vh.value - h - EDGE)
   return { width: `${w}px`, left: `${left}px`, top: `${top}px` }
+}
+
+const ITEM_TIP_WIDTH = 260
+const ITEM_TIP_HEIGHT = 60
+
+const itemTipStyle = (i: number) => {
+  const h = holes.value[i]
+  const item = matchedItems.value[i]
+  if (!h || !item) return {}
+  const w = Math.min(ITEM_TIP_WIDTH, vw.value - EDGE * 2)
+  const holeBox = {
+    left: h.x,
+    top: h.y,
+    right: h.x + h.width,
+    bottom: h.y + h.height,
+    width: h.width,
+    height: h.height,
+  }
+  return placeTipNear(holeBox, w, ITEM_TIP_HEIGHT, item.placement ?? 'right')
+}
+
+const itemText = (i: number) => {
+  const item = matchedItems.value[i]
+  if (!item?.itemKey) return ''
+  return t(`${props.stepI18nPrefix}.${step.value.key}.items.${item.itemKey}`)
+}
+
+const cardStyle = computed(() => {
+  const w = Math.min(CARD_WIDTH, vw.value - EDGE * 2)
+  const h = cardSize.value.height
+  // 多洞同屏时说明文字分布在各洞旁，主卡片不做单洞避让
+  const h0 = holes.value.length === 1 ? holes.value[0] : null
+
+  if (!h0) {
+    return {
+      width: `${w}px`,
+      left: `${(vw.value - w) / 2}px`,
+      top: `${Math.max(EDGE, vh.value * 0.32 - h / 2)}px`,
+    }
+  }
+
+  const holeBox = {
+    left: h0.x,
+    top: h0.y,
+    right: h0.x + h0.width,
+    bottom: h0.y + h0.height,
+    width: h0.width,
+    height: h0.height,
+  }
+  return placeTipNear(holeBox, w, h, step.value.placement ?? 'right')
 })
 
 const queryTarget = (selector?: string): HTMLElement | null => {
@@ -267,38 +337,60 @@ const measureCard = async () => {
   }
 }
 
+const stepItems = computed<SpotlightGuideTargetItem[]>(() => {
+  const cur = step.value
+  if (cur.targets?.length) return cur.targets
+  return cur.target ? [{ selector: cur.target, itemKey: '', placement: cur.placement }] : []
+})
+
 const locate = async (retry = 0) => {
   vw.value = window.innerWidth
   vh.value = window.innerHeight
 
-  const cur = step.value
-  if (!cur.target) {
-    targetEl.value = null
-    targetRect.value = null
+  const items = stepItems.value
+  if (items.length === 0) {
+    targetEls.value = []
+    targetRects.value = []
+    matchedItems.value = []
     await measureCard()
     return
   }
 
-  const el = queryTarget(cur.target)
-  if (!el) {
+  const els: HTMLElement[] = []
+  const rects: DOMRect[] = []
+  const found: SpotlightGuideTargetItem[] = []
+  for (const item of items) {
+    const el = queryTarget(item.selector)
+    if (!el) continue
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
+    els.push(el)
+    rects.push(el.getBoundingClientRect())
+    found.push(item)
+  }
+
+  if (els.length < items.length) {
     if (retry < 12) {
       if (retryTimer) clearTimeout(retryTimer)
       retryTimer = setTimeout(() => locate(retry + 1), 120)
       return
     }
-    if (cur.optional) {
-      goTo(index.value + 1)
+    if (els.length === 0) {
+      // 全部目标缺失：可跳过则跳步，否则退化为居中提示
+      if (step.value.optional) {
+        goTo(index.value + 1)
+        return
+      }
+      targetEls.value = []
+      targetRects.value = []
+      matchedItems.value = []
+      await measureCard()
       return
     }
-    targetEl.value = null
-    targetRect.value = null
-    await measureCard()
-    return
   }
 
-  el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
-  targetEl.value = el
-  targetRect.value = el.getBoundingClientRect()
+  targetEls.value = els
+  targetRects.value = rects
+  matchedItems.value = found
   await measureCard()
 }
 
@@ -330,8 +422,9 @@ const close = () => {
     retryTimer = null
   }
   emit('update:active', false)
-  targetEl.value = null
-  targetRect.value = null
+  targetEls.value = []
+  targetRects.value = []
+  matchedItems.value = []
 }
 
 const finish = () => {
@@ -400,6 +493,45 @@ defineExpose({ open, close })
   z-index: 5000;
   outline: none;
   pointer-events: none;
+}
+
+.guide__svg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.guide__title--floating {
+  position: fixed;
+  top: 7vh;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.guide__tip--item {
+  position: fixed;
+  z-index: 1;
+  pointer-events: none;
+  max-width: 240px;
+  padding: 0;
+  font-size: var(--app-text-base);
+  line-height: 20px;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.guide__actions--floating {
+  position: fixed;
+  bottom: 6vh;
+  left: 50%;
+  transform: translateX(-50%);
+  justify-content: center;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .guide__backdrop {
