@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { clampSidebarWidth, SIDEBAR_COLLAPSED_WIDTH, SIDEBAR_COLLAPSE_THRESHOLD } from '../utils/sidebarWidth'
+import { isMobileViewport } from '../utils/mobile'
 
 export const useUIStore = defineStore('ui', {
   state: () => ({
@@ -145,6 +146,17 @@ export const useUIStore = defineStore('ui', {
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed
       localStorage.setItem('sidebar_collapsed', String(this.sidebarCollapsed))
+      if (isMobileViewport()) {
+        // 移动端偏好独立记忆，避免与桌面端互相污染
+        localStorage.setItem('sidebar_collapsed_mobile', String(this.sidebarCollapsed))
+      }
+    },
+
+    /** 进入平台时按视口决定侧边栏初态：移动端默认收缩（尊重用户在移动端的手动选择） */
+    applyInitialSidebarState() {
+      if (!isMobileViewport()) return
+      const saved = localStorage.getItem('sidebar_collapsed_mobile')
+      this.sidebarCollapsed = saved === null ? true : saved === 'true'
     },
 
     resizeSidebar(width: number) {

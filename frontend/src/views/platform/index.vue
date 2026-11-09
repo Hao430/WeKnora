@@ -214,6 +214,8 @@ onMounted(() => {
     // 支持通过 URL 查询参数打开全局命令面板，例如旧路径
     // /platform/knowledge-search?q=foo 重定向后携带 ?cmdk=foo
     maybeOpenCmdkFromRoute()
+    // 移动端视口默认收起侧边栏
+    uiStore.applyInitialSidebarState()
     // 后台预取对话输入栏资源，进入 creatChat / chat 时复用缓存
     void useChatResourcesStore().prefetchChatInput()
 });
@@ -260,6 +262,13 @@ onUnmounted(() => {
     min-height: 0;
     /* 统一整页背景，让左侧菜单与右侧内容区视觉连贯 */
     background: var(--td-bg-color-container);
+}
+
+/* 移动端视口解除桌面最小宽度，允许竖屏单列布局 */
+@media (max-width: 720px) {
+    .main {
+        min-width: 0;
+    }
 }
 
 /* 右侧路由区：占满剩余宽度与整列高度，并把 min-height:0 传给子页面以便内部 flex 滚动 */
