@@ -74,6 +74,14 @@ ENV BUILD_TIME=${BUILD_TIME_ARG}
 # engine; pass WITH_ANYDOC=0 to skip the Rust toolchain (~few minutes and
 # ~1 GB of build-stage layers).
 ARG WITH_ANYDOC=1
+# Optional rustup mirrors (rustup-init binary + toolchain dists). Empty by
+# default → upstream static.rust-lang.org. For CN networks pass e.g.
+# RUSTUP_DIST_SERVER_ARG=https://rsproxy.cn RUSTUP_UPDATE_ROOT_ARG=https://rsproxy.cn/rustup
+# — same intent as GOPROXY_ARG / APK_MIRROR_ARG above.
+ARG RUSTUP_DIST_SERVER_ARG
+ARG RUSTUP_UPDATE_ROOT_ARG
+ENV RUSTUP_DIST_SERVER=${RUSTUP_DIST_SERVER_ARG}
+ENV RUSTUP_UPDATE_ROOT=${RUSTUP_UPDATE_ROOT_ARG}
 ENV RUSTUP_HOME=/usr/local/rustup CARGO_HOME=/usr/local/cargo
 ENV PATH=/usr/local/cargo/bin:$PATH
 RUN --mount=type=cache,target=/usr/local/cargo/registry \

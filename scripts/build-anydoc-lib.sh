@@ -137,5 +137,14 @@ dest="$crate_dir/lib/$lib_dir"
 mkdir -p "$dest"
 cp "$crate_dir/target/$target/release/$lib_name" "$dest/$lib_name"
 
+# Release profile ships fat-LTO objects: the archive carries LLVM metadata
+# sections (.llvmbc/.llvmcmd/...) next to the real machine code. Go's linker
+# hard-errors on any of them ("disallowed LTO section") when linking cgo
+# archives internally, so strip every .llvm* section — the machine code
+# stays. macOS has no objcopy and Apple's linker accepts LTO objects anyway.
+if command -v objcopy >/dev/null 2>&1; then
+  objcopy --wildcard -R '.llvm*' "$dest/$lib_name"
+fi
+
 echo "Wrote $dest/$lib_name"
 echo "Build WeKnora with the archive: go build -tags anydoc ./cmd/server"
