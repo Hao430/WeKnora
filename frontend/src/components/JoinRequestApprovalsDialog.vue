@@ -33,12 +33,16 @@
           <div class="request-card-meta">
             <span class="meta-row">
               <t-icon name="user" size="14px" class="meta-icon" />
+              <span class="meta-label">{{ $t('joinSpace.approvals.requesterLabel') }}：</span>
               <span class="meta-value">{{ requesterDisplay(row) }}</span>
             </span>
-            <span v-if="row.message" class="meta-row meta-row--message">
-              <t-icon name="chat" size="14px" class="meta-icon" />
-              <span class="meta-value">{{ row.message }}</span>
-            </span>
+          </div>
+          <!-- Reason sits in its own inset block instead of riding the icon
+               row: it is free-form, can wrap over several lines, and reads as
+               a quoted note rather than a second metadata field. -->
+          <div v-if="row.message" class="request-reason">
+            <span class="request-reason-label">{{ $t('joinSpace.approvals.reasonLabel') }}</span>
+            <p class="request-reason-text">{{ row.message }}</p>
           </div>
         </div>
         <div class="request-card-actions">
@@ -240,10 +244,39 @@ watch(
         flex-shrink: 0;
       }
 
+      .meta-label {
+        color: var(--td-text-color-secondary);
+        flex-shrink: 0;
+      }
+
       .meta-value {
         color: var(--td-text-color-primary);
         word-break: break-word;
       }
+    }
+  }
+
+  .request-reason {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 2px;
+    padding: 8px 10px;
+    background: var(--td-bg-color-container-hover);
+    border-radius: var(--app-radius-sm);
+
+    .request-reason-label {
+      font-size: var(--app-text-xs);
+      color: var(--td-text-color-placeholder);
+    }
+
+    .request-reason-text {
+      margin: 0;
+      font-size: var(--app-text-sm);
+      line-height: 1.5;
+      color: var(--td-text-color-primary);
+      white-space: pre-wrap;
+      word-break: break-word;
     }
   }
 

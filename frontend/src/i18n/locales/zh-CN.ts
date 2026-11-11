@@ -5186,6 +5186,12 @@ export default {
       memberCount: '{count} 名成员',
       noDescription: '暂无描述',
       applyButton: '申请加入',
+      applyDialog: {
+        title: '申请加入 {name}',
+        tip: '申请将发送给空间的所有者与管理员审批。',
+        placeholder: '选填：简单说明加入原因',
+        submit: '提交申请'
+      },
       pendingTag: '申请待审',
       messagePrompt: '请输入申请理由（必填）：',
       applySuccess: '已提交加入申请：{name}',
@@ -5201,6 +5207,8 @@ export default {
         expired: '已过期'
       },
       approvals: {
+        requesterLabel: '申请人',
+        reasonLabel: '申请理由',
         title: '加入申请审批',
         description: '以下用户申请加入你管理的空间：',
         empty: '暂无待审申请',

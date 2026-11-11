@@ -5177,6 +5177,12 @@ export default {
       memberCount: '{count}명의 멤버',
       noDescription: '설명 없음',
       applyButton: '가입 신청',
+      applyDialog: {
+        title: '{name} 참여 신청',
+        tip: '신청은 워크스페이스 소유자와 관리자에게 승인 요청으로 전달됩니다.',
+        placeholder: '선택 사항: 참여하려는 이유를 간단히 적어 주세요',
+        submit: '신청 제출'
+      },
       pendingTag: '심사 중',
       messagePrompt: '신청 사유를 입력하세요(필수):',
       applySuccess: '가입 신청이 제출되었습니다: {name}',
@@ -5192,6 +5198,8 @@ export default {
         expired: '만료됨'
       },
       approvals: {
+        requesterLabel: '신청자',
+        reasonLabel: '신청 사유',
         title: '가입 신청 승인',
         description: '다음 사용자가 관리 중인 워크스페이스 가입을 신청했습니다:',
         empty: '승인 대기 중인 신청이 없습니다',

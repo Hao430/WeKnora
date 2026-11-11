@@ -4892,6 +4892,12 @@ export default {
       memberCount: '{count} 人のメンバー',
       noDescription: '説明なし',
       applyButton: '参加を申請',
+      applyDialog: {
+        title: '{name} への参加申請',
+        tip: '申請はワークスペースの所有者と管理者に承認依頼として送信されます。',
+        placeholder: '任意：参加したい理由を簡単にご記入ください',
+        submit: '申請を送信'
+      },
       pendingTag: '審査中',
       messagePrompt: '申請理由を入力してください（必須）：',
       applySuccess: '参加申請を送信しました：{name}',
@@ -4907,6 +4913,8 @@ export default {
         expired: '期限切れ'
       },
       approvals: {
+        requesterLabel: '申請者',
+        reasonLabel: '申請理由',
         title: '参加申請の承認',
         description: '以下のユーザーが管理中のワークスペースへの参加を申請しています：',
         empty: '承認待ちの申請はありません',

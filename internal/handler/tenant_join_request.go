@@ -57,11 +57,12 @@ func NewTenantJoinRequestHandler(
 }
 
 // createJoinRequestRequest is the JSON body for POST /tenant-join-requests.
-// Message is the requester-supplied reason — surfaced to the approving
-// Owner/admin in their inbox.
+// Message is an optional requester-supplied reason — surfaced to the
+// approving Owner/admin in their inbox. Only the length is enforced; an
+// empty reason must stay submittable.
 type createJoinRequestRequest struct {
 	TenantID uint64 `json:"tenant_id" binding:"required"`
-	Message  string `json:"message" binding:"required,max=500"`
+	Message  string `json:"message" binding:"max=500"`
 }
 
 // parseJoinRequestIDFromPath reads :req_id off the gin context.

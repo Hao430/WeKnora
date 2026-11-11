@@ -5179,6 +5179,12 @@ export default {
       memberCount: '{count} 位成員',
       noDescription: '暫無描述',
       applyButton: '申請加入',
+      applyDialog: {
+        title: '申請加入 {name}',
+        tip: '申請將送交空間的擁有者與管理員審批。',
+        placeholder: '選填：簡單說明加入原因',
+        submit: '提交申請'
+      },
       pendingTag: '申請待審',
       messagePrompt: '請輸入申請理由（必填）：',
       applySuccess: '已提交加入申請：{name}',
@@ -5194,6 +5200,8 @@ export default {
         expired: '已過期'
       },
       approvals: {
+        requesterLabel: '申請人',
+        reasonLabel: '申請理由',
         title: '加入申請審批',
         description: '以下使用者申請加入你管理的空間：',
         empty: '暫無待審申請',

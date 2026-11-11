@@ -4892,6 +4892,12 @@ export default {
       memberCount: '{count} members',
       noDescription: 'No description',
       applyButton: 'Apply to Join',
+      applyDialog: {
+        title: 'Request to join {name}',
+        tip: 'Your request goes to the space owner and admins for approval.',
+        placeholder: 'Optional: tell the approver why you want to join',
+        submit: 'Submit request'
+      },
       pendingTag: 'Pending',
       messagePrompt: 'Enter your reason (required):',
       applySuccess: 'Join request submitted for {name}',
@@ -4907,6 +4913,8 @@ export default {
         expired: 'Expired'
       },
       approvals: {
+        requesterLabel: 'Requested by',
+        reasonLabel: 'Reason',
         title: 'Join Request Approvals',
         description: 'These users are requesting to join a workspace you manage:',
         empty: 'No pending requests',

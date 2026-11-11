@@ -78,6 +78,18 @@
       </li>
     </ul>
   </t-dialog>
+
+  <!-- Apply dialog: replaces the old window.prompt, which dropped the native
+       browser modal into the middle of a TDesign page. The reason is
+       optional; the textarea is the only field. -->
+  <t-dialog v-model:visible="applyVisible" width="440px" top="30vh" :header="applyHeader" :on-confirm="submitApply"
+    :confirm-btn="{ content: $t('joinSpace.applyDialog.submit'), loading: applying !== null }"
+    :cancel-btn="{ content: $t('common.cancel') }" :close-on-overlay-click="applying === null"
+    :close-on-esc-keydown="applying === null">
+    <p class="apply-dialog-tip">{{ $t('joinSpace.applyDialog.tip') }}</p>
+    <t-textarea v-model="applyMessage" :placeholder="$t('joinSpace.applyDialog.placeholder')" :maxlength="500"
+      :autosize="{ minRows: 3, maxRows: 5 }" class="apply-dialog-input" />
+  </t-dialog>
 </template>
 
 <script setup lang="ts">
@@ -119,6 +131,13 @@ const mine = ref<TenantJoinRequest[]>([])
 const mineLoading = ref(false)
 const applying = ref<number | null>(null)
 const withdrawing = ref<number | null>(null)
+const applyVisible = ref(false)
+const applyTarget = ref<PublicTenant | null>(null)
+const applyMessage = ref('')
+
+const applyHeader = computed(() =>
+  applyTarget.value ? t('joinSpace.applyDialog.title', { name: applyTarget.value.name }) : '',
+)
 
 function hasPendingFor(tenantId: number): boolean {
   return mine.value.some((r) => r.tenant_id === tenantId && r.status === 'pending')
@@ -191,14 +210,21 @@ async function reloadMine() {
   }
 }
 
-async function onApply(tItem: PublicTenant) {
-  const message = window.prompt(t('joinSpace.messagePrompt')) || ''
-  if (!message.trim()) return
-  applying.value = tItem.id
+function onApply(tItem: PublicTenant) {
+  applyTarget.value = tItem
+  applyMessage.value = ''
+  applyVisible.value = true
+}
+
+async function submitApply() {
+  const target = applyTarget.value
+  if (!target) return
+  applying.value = target.id
   try {
-    const resp = await createJoinRequest(tItem.id, message.trim())
+    const resp = await createJoinRequest(target.id, applyMessage.value.trim())
     if (resp.success) {
-      MessagePlugin.success(t('joinSpace.applySuccess', { name: tItem.name }))
+      MessagePlugin.success(t('joinSpace.applySuccess', { name: target.name }))
+      applyVisible.value = false
       await reloadMine()
     } else {
       MessagePlugin.error(resp.message || t('joinSpace.errors.generic'))
@@ -339,5 +365,16 @@ watch(
   display: flex;
   justify-content: center;
   padding-top: 8px;
+}
+
+.apply-dialog-tip {
+  margin: 0 0 12px 0;
+  color: var(--td-text-color-secondary);
+  font-size: var(--app-text-sm);
+  line-height: 1.55;
+}
+
+.apply-dialog-input {
+  width: 100%;
 }
 </style>
