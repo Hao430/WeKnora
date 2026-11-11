@@ -46,6 +46,28 @@ func (r *userIdentityRepository) GetBySubject(
 	return &identity, nil
 }
 
+// GetByExternalID returns the binding for one secondary provider-side id. An
+// empty id is never a valid lookup key: every row without an external id would
+// match, and the first one would win.
+func (r *userIdentityRepository) GetByExternalID(
+	ctx context.Context, provider, providerTenant, externalID string,
+) (*types.UserIdentity, error) {
+	if strings.TrimSpace(externalID) == "" {
+		return nil, ErrIdentityNotFound
+	}
+	var identity types.UserIdentity
+	err := r.db.WithContext(ctx).
+		Where("provider = ? AND provider_tenant = ? AND external_id = ?", provider, providerTenant, externalID).
+		First(&identity).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrIdentityNotFound
+		}
+		return nil, err
+	}
+	return &identity, nil
+}
+
 // ListByUserID returns every binding of one local user.
 func (r *userIdentityRepository) ListByUserID(ctx context.Context, userID string) ([]*types.UserIdentity, error) {
 	var identities []*types.UserIdentity
@@ -64,6 +86,13 @@ func (r *userIdentityRepository) Create(ctx context.Context, identity *types.Use
 		return err
 	}
 	return nil
+}
+
+// Update persists the mutable fields of a binding.
+func (r *userIdentityRepository) Update(ctx context.Context, identity *types.UserIdentity) error {
+	return r.db.WithContext(ctx).Model(&types.UserIdentity{}).
+		Where("id = ?", identity.ID).
+		Update("external_id", identity.ExternalID).Error
 }
 
 // isDuplicateIdentity recognises the uniq_user_identity violation.

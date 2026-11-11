@@ -5219,6 +5219,13 @@ export default {
         }
       },
       keyLabels: {
+        dingtalk: {
+          directory_sync: {
+            enabled: 'DingTalk directory auto-provisioning',
+            tenant_id: 'Workspace ID auto-provisioned members join',
+            role: 'Role of auto-provisioned members'
+          }
+        },
         auth: {
           registration_mode: 'Registration mode',
           default_tenant_mode: 'Default workspace provisioning',

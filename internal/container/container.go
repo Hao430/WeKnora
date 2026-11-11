@@ -157,7 +157,7 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	must(container.Provide(initDocReaderClient))
 	// DingTalk login app (网页应用) client: separate credentials from the IM
 	// bot adapter above, so it gets its own instance and token cache.
-	must(container.Provide(func(cfg *config.Config) dingtalkAuth.Client {
+	must(container.Provide(func(cfg *config.Config) dingtalkAuth.DirectoryClient {
 		if cfg == nil || cfg.DingTalkAuth == nil {
 			return dingtalkAuth.NewClient(dingtalkAuth.Config{})
 		}
@@ -167,6 +167,9 @@ func BuildContainer(container *dig.Container) *dig.Container {
 			ClientSecret: cfg.DingTalkAuth.ClientSecret,
 		})
 	}))
+	// The login flow only needs Client; derive it from the same instance so the
+	// access-token cache stays shared with the directory sync.
+	must(container.Provide(func(c dingtalkAuth.DirectoryClient) dingtalkAuth.Client { return c }))
 	must(container.Provide(docparser.NewImageResolver))
 	must(container.Provide(initOllamaService))
 	must(container.Provide(initNeo4jClient))
@@ -280,6 +283,7 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	must(container.Provide(service.NewTenantInvitationService))
 	must(container.Provide(service.NewTenantJoinRequestService))
 	must(container.Provide(service.NewDingTalkAuthService))
+	must(container.Provide(service.NewDingTalkDirectoryService))
 	must(container.Provide(service.NewAuditLogService))
 	must(container.Provide(service.NewAuditLogRetentionRunner))
 	must(container.Provide(service.NewKnowledgeBaseService))
@@ -580,6 +584,8 @@ func BuildContainer(container *dig.Container) *dig.Container {
 	logger.Debugf(ctx, "[Container] Data source sync framework registered")
 	must(container.Invoke(startAuditLogRetention))
 	logger.Debugf(ctx, "[Container] Audit log retention runner registered")
+	must(container.Invoke(startDingTalkDirectorySync))
+	logger.Debugf(ctx, "[Container] DingTalk directory sync runner registered")
 	must(container.Provide(service.NewHousekeepingService))
 	must(container.Invoke(startHousekeepingService))
 	logger.Debugf(ctx, "[Container] Knowledge housekeeping runner registered")
@@ -2351,6 +2357,74 @@ func startAuditLogRetention(
 	runner.Start(context.Background())
 	cleaner.RegisterWithName("AuditLogRetentionRunner", func() error {
 		runner.StopWithin(cleanupStepTimeout)
+		return nil
+	})
+}
+
+// directoryReconcileInterval is the backstop cadence for missed contact
+// events and for members that existed before the sync was enabled. Hourly
+// keeps a modest corp well inside the DingTalk API quota.
+const directoryReconcileInterval = time.Hour
+
+// startDingTalkDirectorySync keeps local accounts aligned with the DingTalk
+// corp directory. The event stream is connected for the process lifetime
+// (whenever 网页应用 credentials exist) so enabling the feature in system
+// settings takes effect on the next event; the hourly full pass fills the
+// backlog and re-checks members whose events were missed.
+func startDingTalkDirectorySync(
+	svc interfaces.DingTalkDirectoryService,
+	cfg *config.Config,
+	cleaner interfaces.ResourceCleaner,
+) {
+	if svc == nil || cleaner == nil || cfg == nil || cfg.DingTalkAuth == nil {
+		return
+	}
+	creds := dingtalkAuth.Config{
+		CorpID:       strings.TrimSpace(cfg.DingTalkAuth.CorpID),
+		ClientID:     strings.TrimSpace(cfg.DingTalkAuth.ClientID),
+		ClientSecret: strings.TrimSpace(cfg.DingTalkAuth.ClientSecret),
+	}
+	if creds.ClientID == "" || creds.ClientSecret == "" {
+		logger.Debugf(context.Background(), "[DingTalk] directory sync skipped: no 网页应用 credentials")
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go imPkg.RunSupervised(ctx, imPkg.SupervisorConfig{
+		Name: "DingTalk directory events",
+		Connect: func(connectCtx context.Context) (func(), error) {
+			stream := dingtalkAuth.NewDirectoryStream(creds,
+				func(eventCtx context.Context, evt *dingtalkAuth.DirectoryEvent) error {
+					return svc.HandleDirectoryEvent(eventCtx, evt.EventType, evt.CorpID, evt.UserIDs)
+				})
+			if err := stream.Start(connectCtx); err != nil {
+				return nil, err
+			}
+			return stream.Close, nil
+		},
+	})
+
+	go func() {
+		// First pass waits a minute so the database and cache are warm; later
+		// passes run on the fixed interval.
+		timer := time.NewTimer(time.Minute)
+		defer timer.Stop()
+		for {
+			select {
+			case <-timer.C:
+				if _, err := svc.SyncDirectory(context.Background()); err != nil &&
+					!errors.Is(err, service.ErrDingTalkDirectoryDisabled) {
+					logger.Warnf(context.Background(), "[DingTalk] directory reconciliation failed: %v", err)
+				}
+				timer.Reset(directoryReconcileInterval)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	cleaner.RegisterWithName("DingTalkDirectorySync", func() error {
+		cancel()
 		return nil
 	})
 }

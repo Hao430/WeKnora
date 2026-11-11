@@ -5219,6 +5219,13 @@ export default {
         }
       },
       keyLabels: {
+        dingtalk: {
+          directory_sync: {
+            enabled: 'DingTalk 連絡先の自動プロビジョニング',
+            tenant_id: '自動プロビジョニングされたメンバーが参加するワークスペース ID',
+            role: '自動プロビジョニングされたメンバーのロール'
+          }
+        },
         auth: {
           registration_mode: '登録モード',
           default_tenant_mode: 'デフォルトのワークスペース作成方式',

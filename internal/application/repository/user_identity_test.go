@@ -85,3 +85,39 @@ func TestUserIdentityRepositoryRejectsDuplicateBinding(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, count)
 }
+
+func TestUserIdentityRepositoryExternalID(t *testing.T) {
+	db := newUserIdentityTestDB(t)
+	repo := NewUserIdentityRepository(db)
+	users := NewUserRepository(db)
+	ctx := context.Background()
+
+	user := newDingTalkUser("u-ding-ext", "13800000001@jgjl.cn")
+	require.NoError(t, users.CreateUser(ctx, user))
+
+	identity := newDingTalkIdentity(user.ID, "union-ext")
+	identity.ExternalID = "dt-userid-1"
+	require.NoError(t, repo.Create(ctx, identity))
+
+	got, err := repo.GetByExternalID(ctx, types.IdentityProviderDingTalk, "corp-1", "dt-userid-1")
+	require.NoError(t, err)
+	assert.Equal(t, "union-ext", got.Subject)
+
+	// An empty userid must never match: it would resolve an arbitrary row
+	// whose external_id was never backfilled.
+	_, err = repo.GetByExternalID(ctx, types.IdentityProviderDingTalk, "corp-1", "  ")
+	require.ErrorIs(t, err, ErrIdentityNotFound)
+
+	// Login-bound identities start without a userid; the directory sync
+	// backfills it, and the leave event then resolves through it.
+	legacy := newDingTalkIdentity(user.ID, "union-legacy")
+	require.NoError(t, repo.Create(ctx, legacy))
+	_, err = repo.GetByExternalID(ctx, types.IdentityProviderDingTalk, "corp-1", "dt-userid-2")
+	require.ErrorIs(t, err, ErrIdentityNotFound)
+
+	legacy.ExternalID = "dt-userid-2"
+	require.NoError(t, repo.Update(ctx, legacy))
+	got, err = repo.GetByExternalID(ctx, types.IdentityProviderDingTalk, "corp-1", "dt-userid-2")
+	require.NoError(t, err)
+	assert.Equal(t, "union-legacy", got.Subject)
+}

@@ -4769,6 +4769,13 @@ export default {
         }
       },
       keyLabels: {
+        dingtalk: {
+          directory_sync: {
+            enabled: '钉钉通讯录自动开通',
+            tenant_id: '自动开通成员默认加入的空间 ID',
+            role: '自动开通成员的空间角色'
+          }
+        },
         model: {
           max_concurrency: '模型默认并发上限'
         },

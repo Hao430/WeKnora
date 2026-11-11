@@ -24,8 +24,12 @@ type UserIdentity struct {
 	// Subject is the provider-side account id (DingTalk unionId). It is treated
 	// as an opaque identifier and never logged.
 	Subject string `json:"subject" gorm:"type:varchar(191);not null;uniqueIndex:uniq_user_identity"`
+	// ExternalID is a secondary provider-side account id. For DingTalk it is
+	// the corp-local userid, which directory events carry and the unionId
+	// does not. Empty for identities bound before directory sync existed.
+	ExternalID string `json:"external_id" gorm:"type:varchar(191);not null;default:''"`
 	// CreatedAt is the first binding time.
 	CreatedAt time.Time `json:"created_at"`
-	// UpdatedAt is the last binding update time.
+	// UpdatedAt is the last binding time.
 	UpdatedAt time.Time `json:"updated_at"`
 }

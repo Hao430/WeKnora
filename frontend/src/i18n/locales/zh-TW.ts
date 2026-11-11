@@ -4762,6 +4762,13 @@ export default {
         }
       },
       keyLabels: {
+        dingtalk: {
+          directory_sync: {
+            enabled: '釘釘通訊錄自動開通',
+            tenant_id: '自動開通成員預設加入的空間 ID',
+            role: '自動開通成員的空間角色'
+          }
+        },
         model: {
           max_concurrency: '模型預設併發上限'
         },

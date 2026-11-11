@@ -153,6 +153,29 @@ var registry = map[string]settingSpec{
 		Description: "公开注册成功后的默认空间策略。create_personal = 自动创建个人空间并设为 Owner；" +
 			"tenantless = 仅创建用户，等待接受邀请或主动创建空间。修改后只影响新注册用户。",
 	},
+	"dingtalk.directory_sync.enabled": {
+		Type:     "bool",
+		EnvName:  "",
+		Default:  false,
+		Category: "auth",
+		Description: "钉钉通讯录自动开通。开启后监听钉钉组织成员变动：新成员自动注册账号并加入下方指定空间（访客只读权限），" +
+			"离职成员自动禁用账号（数据保留，重新入职自动恢复）。保存后立即生效；全量对账每小时一次，开启后最迟一小时完成存量成员的补开。",
+	},
+	"dingtalk.directory_sync.tenant_id": {
+		Type:        "int",
+		EnvName:     "",
+		Default:     int64(0),
+		Category:    "auth",
+		Description: "自动开通成员默认加入的空间 ID。0 表示只创建账号、不加入任何空间。",
+	},
+	"dingtalk.directory_sync.role": {
+		Type:        "string",
+		EnvName:     "",
+		Default:     "viewer",
+		Enum:        []string{"viewer", "contributor"},
+		Category:    "auth",
+		Description: "自动开通成员在目标空间中的角色。viewer = 访客（只读）；contributor = 可创建内容。",
+	},
 	"auth.complex_password_enabled": {
 		Type:     "bool",
 		EnvName:  "WEKNORA_AUTH_COMPLEX_PASSWORD_ENABLED",

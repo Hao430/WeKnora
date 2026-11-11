@@ -58,3 +58,18 @@ type DingTalkLoginResult struct {
 	// IsNewUser reports that this login provisioned the account.
 	IsNewUser bool
 }
+
+// DingTalkDirectorySyncResult summarizes one directory reconciliation pass.
+type DingTalkDirectorySyncResult struct {
+	// Scanned is the number of corp members returned by DingTalk.
+	Scanned int
+	// Created counts newly provisioned accounts.
+	Created int
+	// Bound counts existing local accounts that just got the identity.
+	Bound int
+	// Restored counts returning members whose account was re-enabled.
+	Restored int
+	// Skipped counts members without a usable phone number or with an
+	// email collision.
+	Skipped int
+}

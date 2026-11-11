@@ -4760,6 +4760,13 @@ export default {
         }
       },
       keyLabels: {
+        dingtalk: {
+          directory_sync: {
+            enabled: 'DingTalk 주소록 자동 프로비저닝',
+            tenant_id: '자동 프로비저닝 구성원이 참여할 워크스페이스 ID',
+            role: '자동 프로비저닝 구성원의 역할'
+          }
+        },
         model: {
           max_concurrency: '모델 기본 동시 처리 상한'
         },

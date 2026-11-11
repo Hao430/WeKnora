@@ -246,7 +246,7 @@ func (s *dingTalkAuthService) provision(
 		return nil, false, ErrDingTalkEmailTaken
 	}
 
-	username, err := s.availableUsername(ctx, dingTalkUsernameSeed(profile), "")
+	username, err := availableUsername(ctx, s.users, dingTalkUsernameSeed(profile), "")
 	if err != nil {
 		return nil, false, err
 	}
@@ -453,13 +453,13 @@ func (s *dingTalkAuthService) boundUser(ctx context.Context, unionID string) (*t
 // availableUsername turns a readable seed into a free username, falling back
 // to a numeric suffix on collision. exceptUserID is excluded from the check so
 // a returning account does not collide with itself while syncing its name.
-func (s *dingTalkAuthService) availableUsername(ctx context.Context, base, exceptUserID string) (string, error) {
+func availableUsername(ctx context.Context, users userStore, base, exceptUserID string) (string, error) {
 	for i := 0; i < 20; i++ {
 		candidate := base
 		if i > 0 {
 			candidate = fmt.Sprintf("%s-%d", base, i)
 		}
-		existing, err := s.users.GetUserByUsername(ctx, candidate)
+		existing, err := users.GetUserByUsername(ctx, candidate)
 		if err == nil && existing != nil && existing.ID == exceptUserID {
 			return candidate, nil
 		}
@@ -506,7 +506,7 @@ func (s *dingTalkAuthService) syncUsername(
 	if name == "" {
 		return user
 	}
-	candidate, err := s.availableUsername(ctx, name, user.ID)
+	candidate, err := availableUsername(ctx, s.users, name, user.ID)
 	if err != nil {
 		logger.Warnf(ctx, "dingtalk: resolve username for user %s: %v", user.ID, err)
 		return user

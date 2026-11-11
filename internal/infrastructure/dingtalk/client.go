@@ -92,7 +92,7 @@ type client struct {
 // NewClient builds a login client. The HTTP client uses the default transport
 // on purpose: a custom transport would bypass HTTPS_PROXY, which deployments
 // behind an egress proxy depend on.
-func NewClient(cfg Config) Client {
+func NewClient(cfg Config) DirectoryClient {
 	return &client{
 		cfg:        cfg,
 		httpClient: &http.Client{Timeout: requestTimeout},
