@@ -532,6 +532,9 @@ defineExpose({ open, close })
   margin-top: 0;
   padding-top: 0;
   border-top: none;
+  /* .guide 根容器为 pointer-events:none，多洞模式的按钮是它的直接子元素，
+     必须自行恢复可点击，否则点击会穿透到下面的 backdrop 命中层。 */
+  pointer-events: auto;
 }
 
 .guide__backdrop {
