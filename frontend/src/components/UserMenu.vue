@@ -96,26 +96,32 @@
           <t-icon name="user" class="menu-icon" />
           <span>{{ $t('general.personalSettings') }}</span>
         </div>
+        <!-- 2026-11-11 精简主菜单：空间设置已收进「全部设置 → 空间」，这里先注释保留。
         <div v-if="!authStore.isLiteMode" class="menu-item" @click="handleQuickNav('tenant')">
           <t-icon name="user-circle" class="menu-icon" />
           <span>{{ $t('settings.workspaceSettings') }}</span>
         </div>
+        -->
         <!-- “管理”类快捷入口只对真正具备写权限的人展示。只读名册和模型列表
              仍可从「全部设置」进入，避免 viewer 看到名不副实的管理入口。 -->
+        <!-- 2026-11-11 精简主菜单：成员管理已收进「全部设置 → 成员」，这里先注释保留。
         <div v-if="canManageMembers" class="menu-item" @click="handleQuickNav('members')">
           <t-icon name="usergroup" class="menu-icon" />
           <span>{{ $t('tenantMember.title') }}</span>
         </div>
+        -->
         <!-- 申请加入空间：公开空间目录 + 我的申请。对全部登录用户开放；
              目录数据由后端 is_public 白名单过滤。 -->
         <div class="menu-item" @click="openJoinSpaceDialog">
           <t-icon name="add-circle" class="menu-icon" />
           <span>{{ $t('joinSpace.title') }}</span>
         </div>
+        <!-- 2026-11-11 精简主菜单：模型管理已收进「全部设置 → 模型」，这里先注释保留。
         <div v-if="canManageModels" class="menu-item" @click="handleQuickNav('models')">
           <t-icon name="control-platform" class="menu-icon" />
           <span>{{ $t('settings.modelManagement') }}</span>
         </div>
+        -->
         <div class="menu-divider"></div>
         <div class="menu-item" @click="handleSettings">
           <t-icon name="setting" class="menu-icon" />
