@@ -4899,6 +4899,8 @@ export default {
         submit: '申請を送信'
       },
       pendingTag: '審査中',
+      enterButton: 'スペースに入る',
+      currentTenantTag: '現在のスペース',
       messagePrompt: '申請理由を入力してください（必須）：',
       applySuccess: '参加申請を送信しました：{name}',
       myRequestsTitle: '自分の申請',

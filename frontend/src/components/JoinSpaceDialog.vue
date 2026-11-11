@@ -40,7 +40,15 @@
           <p class="tenant-desc">{{ tItem.description || $t('joinSpace.noDescription') }}</p>
         </div>
         <div class="tenant-card-actions">
-          <t-button v-if="!hasPendingFor(tItem.id)" theme="primary" variant="outline" size="small"
+          <template v-if="tItem.joined">
+            <t-tag v-if="isCurrentTenant(tItem.id)" theme="success" variant="light" size="small">
+              {{ $t('joinSpace.currentTenantTag') }}
+            </t-tag>
+            <t-button v-else theme="primary" variant="outline" size="small" @click="enterTenant(tItem)">
+              {{ $t('joinSpace.enterButton') }}
+            </t-button>
+          </template>
+          <t-button v-else-if="!hasPendingFor(tItem.id)" theme="primary" variant="outline" size="small"
             :loading="applying === tItem.id" @click="onApply(tItem)">
             {{ $t('joinSpace.applyButton') }}
           </t-button>
@@ -107,6 +115,12 @@ import {
   type TenantJoinRequest,
   type TenantJoinRequestStatus,
 } from '@/api/tenant/joinRequests'
+import {
+  navigateAfterTenantSwitch,
+  persistLastActiveTenantPreference,
+  stashTenantSwitchToast,
+} from '@/utils/tenantSwitch'
+import { useRoleLabel } from '@/composables/useRoleLabel'
 
 // v-model:visible — parent owns open/close so the entry point stays
 // the single source of truth. Reload both views on every open.
@@ -119,6 +133,35 @@ const visibleModel = computed({
 
 const { t } = useI18n()
 const authStore = useAuthStore()
+const { formatRole } = useRoleLabel()
+
+// Same source of truth as TenantSelector: the explicit override first, then
+// the home tenant. authStore.tenant is the active space and must not be used
+// here — it changes with every switch.
+const currentTenantId = computed(() => {
+  if (authStore.selectedTenantId) return Number(authStore.selectedTenantId)
+  const home = authStore.user?.tenant_id
+  return home ? Number(home) : null
+})
+
+function isCurrentTenant(tenantId: number): boolean {
+  return currentTenantId.value === tenantId
+}
+
+// Mirrors TenantSelector.selectTenant, minus the dropdown bookkeeping: the
+// applied tenant is already joined, so entering is a plain workspace switch.
+function enterTenant(tItem: PublicTenant) {
+  if (isCurrentTenant(tItem.id)) return
+  const membership = (authStore.memberships ?? []).find((m) => Number(m.tenant_id) === tItem.id)
+  authStore.setSelectedTenant(tItem.id, tItem.name)
+  stashTenantSwitchToast({
+    name: tItem.name,
+    role: membership ? formatRole(membership.role) : undefined,
+    roleEnum: membership?.role || undefined,
+  })
+  persistLastActiveTenantPreference(tItem.id)
+  navigateAfterTenantSwitch()
+}
 
 const PAGE_SIZE = 10
 const keyword = ref('')

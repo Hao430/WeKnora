@@ -37,6 +37,9 @@ export interface PublicTenant {
   name: string
   description: string
   member_count: number
+  // joined=true means the caller already belongs to this space; the
+  // directory then offers "enter" instead of "apply".
+  joined?: boolean
   created_at: string
 }
 

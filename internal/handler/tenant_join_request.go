@@ -206,6 +206,8 @@ func (h *TenantJoinRequestHandler) ListPublicTenants(c *gin.Context) {
 		return
 	}
 
+	caller, _ := types.UserIDFromContext(ctx)
+
 	resp := make([]types.PublicTenantResponse, 0, len(tenants))
 	for _, t := range tenants {
 		item := types.PublicTenantResponse{
@@ -218,6 +220,13 @@ func (h *TenantJoinRequestHandler) ListPublicTenants(c *gin.Context) {
 			members, mErr := h.memberService.ListByTenant(ctx, t.ID)
 			if mErr == nil {
 				item.MemberCount = int64(len(members))
+			}
+			// Joined drives the directory button: members get "enter the
+			// space" instead of "apply", so a second request is not offered.
+			if caller != "" {
+				if membership, gErr := h.memberService.GetMembership(ctx, caller, t.ID); gErr == nil && membership != nil {
+					item.Joined = true
+				}
 			}
 		}
 		resp = append(resp, item)

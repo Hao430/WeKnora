@@ -5186,6 +5186,8 @@ export default {
         submit: '提交申請'
       },
       pendingTag: '申請待審',
+      enterButton: '進入空間',
+      currentTenantTag: '目前空間',
       messagePrompt: '請輸入申請理由（必填）：',
       applySuccess: '已提交加入申請：{name}',
       myRequestsTitle: '我的申請',

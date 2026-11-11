@@ -5184,6 +5184,8 @@ export default {
         submit: 'Отправить запрос'
       },
       pendingTag: 'На рассмотрении',
+      enterButton: 'Войти в пространство',
+      currentTenantTag: 'Текущее пространство',
       messagePrompt: 'Укажите причину заявки (обязательно):',
       applySuccess: 'Заявка отправлена: {name}',
       myRequestsTitle: 'Мои заявки',

@@ -5193,6 +5193,8 @@ export default {
         submit: '提交申请'
       },
       pendingTag: '申请待审',
+      enterButton: '进入空间',
+      currentTenantTag: '当前空间',
       messagePrompt: '请输入申请理由（必填）：',
       applySuccess: '已提交加入申请：{name}',
       myRequestsTitle: '我的申请',

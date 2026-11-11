@@ -4899,6 +4899,8 @@ export default {
         submit: 'Submit request'
       },
       pendingTag: 'Pending',
+      enterButton: 'Enter space',
+      currentTenantTag: 'Current space',
       messagePrompt: 'Enter your reason (required):',
       applySuccess: 'Join request submitted for {name}',
       myRequestsTitle: 'My Requests',

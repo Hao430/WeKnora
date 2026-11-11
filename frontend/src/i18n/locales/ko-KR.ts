@@ -5184,6 +5184,8 @@ export default {
         submit: '신청 제출'
       },
       pendingTag: '심사 중',
+      enterButton: '공간 입장',
+      currentTenantTag: '현재 공간',
       messagePrompt: '신청 사유를 입력하세요(필수):',
       applySuccess: '가입 신청이 제출되었습니다: {name}',
       myRequestsTitle: '내 신청',

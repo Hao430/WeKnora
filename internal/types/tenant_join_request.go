@@ -121,9 +121,12 @@ type TenantJoinRequestResponse struct {
 // tenant list/search endpoint. Only discoverability metadata — never
 // settings, quotas, or member rosters.
 type PublicTenantResponse struct {
-	ID          uint64    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	MemberCount int64     `json:"member_count"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          uint64 `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	MemberCount int64  `json:"member_count"`
+	// Joined reports that the caller already belongs to this tenant. The
+	// directory renders "enter" instead of "apply" for those rows.
+	Joined    bool      `json:"joined"`
+	CreatedAt time.Time `json:"created_at"`
 }
