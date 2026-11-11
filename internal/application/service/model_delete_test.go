@@ -356,6 +356,10 @@ func (s *stubTenantServiceForModelDelete) SearchTenants(context.Context, string,
 	return nil, 0, nil
 }
 
+func (s *stubTenantServiceForModelDelete) ListPublicTenants(context.Context, string, int, int) ([]*types.Tenant, int64, error) {
+	return nil, 0, nil
+}
+
 func (s *stubTenantServiceForModelDelete) GetTenantByIDForUser(context.Context, uint64, string) (*types.Tenant, error) {
 	return s.tenant, nil
 }
@@ -484,6 +488,7 @@ func (
 	uint64,
 	*string,
 	*string,
+	*bool,
 ) (
 	*types.Tenant,
 	error,

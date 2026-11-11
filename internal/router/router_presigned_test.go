@@ -67,6 +67,10 @@ func (s *stubTenantService) SearchTenants(context.Context, string, uint64, int, 
 	panic("unexpected")
 }
 
+func (s *stubTenantService) ListPublicTenants(context.Context, string, int, int) ([]*types.Tenant, int64, error) {
+	panic("unexpected")
+}
+
 func (s *stubTenantService) GetTenantByIDForUser(context.Context, uint64, string) (*types.Tenant, error) {
 	panic("unexpected")
 }
@@ -242,6 +246,6 @@ func TestPresignedFile_MissingFile_404(t *testing.T) {
 	}
 }
 
-func (s *stubTenantService) UpdateTenantProfile(context.Context, uint64, *string, *string) (*types.Tenant, error) {
+func (s *stubTenantService) UpdateTenantProfile(context.Context, uint64, *string, *string, *bool) (*types.Tenant, error) {
 	panic("unexpected UpdateTenantProfile call")
 }

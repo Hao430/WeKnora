@@ -117,6 +117,33 @@ func (r *tenantRepository) SearchTenants(ctx context.Context, keyword string, te
 	return tenants, total, nil
 }
 
+// ListPublicTenants lists tenants flagged is_public with an optional
+// name/description keyword filter, newest first, paginated. Serves
+// the "apply to join" directory endpoint.
+func (r *tenantRepository) ListPublicTenants(ctx context.Context, keyword string, page, pageSize int) ([]*types.Tenant, int64, error) {
+	var tenants []*types.Tenant
+	var total int64
+
+	query := r.db.WithContext(ctx).Model(&types.Tenant{}).Where("is_public = ?", true)
+	if keyword != "" {
+		escaped := escapeLikeKeyword(keyword)
+		query = query.Where(
+			"name LIKE ? ESCAPE ? OR description LIKE ? ESCAPE ?",
+			"%"+escaped+"%", likeEscapeChar, "%"+escaped+"%", likeEscapeChar)
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	if page > 0 && pageSize > 0 {
+		query = query.Offset((page - 1) * pageSize).Limit(pageSize)
+	}
+	if err := query.Order("created_at DESC").Find(&tenants).Error; err != nil {
+		return nil, 0, err
+	}
+	return tenants, total, nil
+}
+
 // UpdateTenant updates tenant.
 func (r *tenantRepository) UpdateTenant(ctx context.Context, tenant *types.Tenant) error {
 	// Settings handlers may carry an older snapshot of the whole tenant.
@@ -133,13 +160,16 @@ func (r *tenantRepository) SetChatHistoryConfig(
 		Update("chat_history_config", cfg).Error
 }
 
-func (r *tenantRepository) UpdateTenantProfile(ctx context.Context, id uint64, name, description *string) error {
+func (r *tenantRepository) UpdateTenantProfile(ctx context.Context, id uint64, name, description *string, isPublic *bool) error {
 	fields := map[string]interface{}{}
 	if name != nil {
 		fields["name"] = *name
 	}
 	if description != nil {
 		fields["description"] = *description
+	}
+	if isPublic != nil {
+		fields["is_public"] = *isPublic
 	}
 	if id == 0 || len(fields) == 0 {
 		return errors.New("workspace id and profile fields are required")

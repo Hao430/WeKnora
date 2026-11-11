@@ -60,6 +60,18 @@ const (
 	// a still-pending invitation before the invitee acts. Actor is
 	// the Owner; target is the invitee.
 	AuditActionInvitationRevoked AuditAction = "rbac.invitation_revoked"
+	// AuditActionJoinRequestSubmitted fires when a user submits a join
+	// request to a public tenant (reverse flow of invitation_sent).
+	AuditActionJoinRequestSubmitted AuditAction = "rbac.join_request_submitted"
+	// AuditActionJoinRequestAccepted fires when an Owner/admin approves
+	// a join request; the accept flow creates the viewer membership.
+	AuditActionJoinRequestAccepted AuditAction = "rbac.join_request_accepted"
+	// AuditActionJoinRequestDeclined fires when an Owner/admin rejects
+	// a join request.
+	AuditActionJoinRequestDeclined AuditAction = "rbac.join_request_declined"
+	// AuditActionJoinRequestWithdrawn fires when the requester cancels
+	// their own pending join request.
+	AuditActionJoinRequestWithdrawn AuditAction = "rbac.join_request_withdrawn"
 	// AuditActionInvitationExpired fires when the lazy sweep transitions
 	// an overdue pending row to expired. Actor is empty (system).
 	AuditActionInvitationExpired AuditAction = "rbac.invitation_expired"

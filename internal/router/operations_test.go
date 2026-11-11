@@ -37,7 +37,7 @@ func registerOperationAreas(v1 *gin.RouterGroup, g *rbacGuards) {
 	RegisterMessageRoutes(v1, &handler.MessageHandler{}, g)
 	RegisterSystemRoutes(v1, &handler.SystemHandler{}, g)
 	RegisterSystemAdminRoutes(v1, &handler.SystemHandler{}, nil, g)
-	RegisterTenantRoutes(v1, &handler.TenantHandler{}, &handler.TenantMemberHandler{}, nil, nil, g)
+	RegisterTenantRoutes(v1, &handler.TenantHandler{}, &handler.TenantMemberHandler{}, nil, nil, nil, g)
 	RegisterWebSearchProviderRoutes(
 		v1,
 		&handler.WebSearchProviderHandler{},

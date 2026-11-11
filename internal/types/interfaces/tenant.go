@@ -25,7 +25,8 @@ type TenantService interface {
 	// calls with history indexing/cleanup; generic tenant updates must not write it.
 	SetChatHistoryConfig(ctx context.Context, tenantID uint64, config *types.ChatHistoryConfig) error
 	// UpdateTenantProfile changes only supplied display fields, including an empty description.
-	UpdateTenantProfile(ctx context.Context, id uint64, name, description *string) (*types.Tenant, error)
+	// isPublic toggles join-request discoverability; nil preserves it.
+	UpdateTenantProfile(ctx context.Context, id uint64, name, description *string, isPublic *bool) (*types.Tenant, error)
 	// DeleteTenant deletes a tenant
 	DeleteTenant(ctx context.Context, id uint64) error
 	// ListAllTenants lists all tenants (for users with cross-tenant access permission)
@@ -39,6 +40,11 @@ type TenantService interface {
 	BulkSetStorageQuota(ctx context.Context, quotaBytes int64) (int64, error)
 	// SearchTenants searches tenants with pagination and filters
 	SearchTenants(ctx context.Context, keyword string, tenantID uint64, page, pageSize int) ([]*types.Tenant, int64, error)
+	// ListPublicTenants lists tenants flagged is_public with optional
+	// name/description keyword filter and pagination. Serves the
+	// "apply to join" directory: only discoverability metadata, never
+	// private settings.
+	ListPublicTenants(ctx context.Context, keyword string, page, pageSize int) ([]*types.Tenant, int64, error)
 	// GetTenantByIDForUser gets a tenant by ID with permission check
 	GetTenantByIDForUser(ctx context.Context, tenantID uint64, userID string) (*types.Tenant, error)
 	// GetWeKnoraCloudCredentials returns the decrypted WeKnoraCloud credentials for the current tenant.
@@ -57,12 +63,15 @@ type TenantRepository interface {
 	ListTenants(ctx context.Context) ([]*types.Tenant, error)
 	// SearchTenants searches tenants with pagination and filters
 	SearchTenants(ctx context.Context, keyword string, tenantID uint64, page, pageSize int) ([]*types.Tenant, int64, error)
+	// ListPublicTenants — see TenantService.ListPublicTenants.
+	ListPublicTenants(ctx context.Context, keyword string, page, pageSize int) ([]*types.Tenant, int64, error)
 	// UpdateTenant updates a tenant
 	UpdateTenant(ctx context.Context, tenant *types.Tenant) error
 	// SetChatHistoryConfig is the only update path for the managed history config.
 	SetChatHistoryConfig(ctx context.Context, tenantID uint64, config *types.ChatHistoryConfig) error
 	// UpdateTenantProfile changes only supplied display fields.
-	UpdateTenantProfile(ctx context.Context, id uint64, name, description *string) error
+	// isPublic toggles join-request discoverability; nil preserves it.
+	UpdateTenantProfile(ctx context.Context, id uint64, name, description *string, isPublic *bool) error
 	// DeleteTenant deletes a tenant
 	DeleteTenant(ctx context.Context, id uint64) error
 	// AdjustStorageUsed adjusts the storage used for a tenant

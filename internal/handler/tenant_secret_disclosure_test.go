@@ -187,6 +187,6 @@ func TestPutTenantParserConfigAdminPreservesRedactedSecrets(t *testing.T) {
 	assert.Equal(t, "https://example.com/mineru", tenant.ParserEngineConfig.MinerUEndpoint)
 }
 
-func (s *stubTenantService) UpdateTenantProfile(context.Context, uint64, *string, *string) (*types.Tenant, error) {
+func (s *stubTenantService) UpdateTenantProfile(context.Context, uint64, *string, *string, *bool) (*types.Tenant, error) {
 	panic("unexpected UpdateTenantProfile call")
 }

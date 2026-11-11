@@ -124,6 +124,11 @@ type Tenant struct {
 	DefaultSettings *DefaultSettings `yaml:"default_settings" json:"default_settings" gorm:"type:jsonb"`
 	// API principal config: controls how X-API-Key requests map to terminal principals.
 	APIPrincipalConfig *APIPrincipalConfig `yaml:"api_principal_config" json:"-" gorm:"type:jsonb"`
+	// IsPublic marks the tenant as discoverable through the public
+	// tenant list/search endpoint so logged-in users can submit join
+	// requests. Discoverability only — content access still requires an
+	// active membership (see spec: 申请加入空间).
+	IsPublic bool `yaml:"is_public"              json:"is_public"              gorm:"default:false"`
 	// Creation time
 	CreatedAt time.Time `yaml:"created_at"          json:"created_at"`
 	// Last updated time

@@ -52,6 +52,7 @@ type RouterParams struct {
 	TenantMemberService          interfaces.TenantMemberService
 	TenantMemberHandler          *handler.TenantMemberHandler
 	TenantInvitationHandler      *handler.TenantInvitationHandler
+	TenantJoinRequestHandler     *handler.TenantJoinRequestHandler
 	AuditLogHandler              *handler.AuditLogHandler
 	AuditLogService              interfaces.AuditLogService
 	ChunkHandler                 *handler.ChunkHandler
@@ -262,8 +263,9 @@ func NewRouter(params RouterParams) *gin.Engine {
 		v1.Use(rbacGuards.apiKeyAuthorizer.Middleware())
 
 		RegisterAuthRoutes(v1, params.AuthHandler, rbacGuards)
-		RegisterTenantRoutes(v1, params.TenantHandler, params.TenantMemberHandler, params.TenantInvitationHandler, params.AuditLogHandler, rbacGuards)
+		RegisterTenantRoutes(v1, params.TenantHandler, params.TenantMemberHandler, params.TenantInvitationHandler, params.TenantJoinRequestHandler, params.AuditLogHandler, rbacGuards)
 		RegisterMyInvitationRoutes(v1, params.TenantInvitationHandler)
+		RegisterJoinRequestRoutes(v1, params.TenantJoinRequestHandler)
 		RegisterKnowledgeBaseRoutes(v1, params.KBHandler, rbacGuards)
 		RegisterImageAttrRoutes(v1, params.KBHandler, rbacGuards)
 		RegisterKnowledgeBaseActivityRoutes(v1, params.AuditLogHandler, rbacGuards)

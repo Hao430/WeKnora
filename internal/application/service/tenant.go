@@ -195,11 +195,12 @@ func (
 	ctx context.Context,
 	id uint64,
 	name, description *string,
+	isPublic *bool,
 ) (
 	*types.Tenant,
 	error,
 ) {
-	if id == 0 || (name == nil && description == nil) {
+	if id == 0 || (name == nil && description == nil && isPublic == nil) {
 		return nil, werrors.NewValidationError("workspace id and profile fields are required")
 	}
 	if name != nil {
@@ -219,7 +220,7 @@ func (
 	if _, err := s.GetTenantByID(ctx, id); err != nil {
 		return nil, err
 	}
-	if err := s.repo.UpdateTenantProfile(ctx, id, name, description); err != nil {
+	if err := s.repo.UpdateTenantProfile(ctx, id, name, description, isPublic); err != nil {
 		return nil, err
 	}
 	return s.GetTenantByID(ctx, id)
@@ -308,6 +309,22 @@ func (s *tenantService) SearchTenants(ctx context.Context, keyword string, tenan
 
 	logger.Infof(ctx, "Tenants search completed, keyword: %s, tenantID: %d, page: %d, pageSize: %d, total: %d, found: %d",
 		keyword, tenantID, page, pageSize, total, len(tenants))
+	return tenants, total, nil
+}
+
+// ListPublicTenants lists tenants flagged is_public with optional
+// keyword filter and pagination. Pure passthrough — the repo owns the
+// filtering; the handler owns the slim projection.
+func (s *tenantService) ListPublicTenants(ctx context.Context, keyword string, page, pageSize int) ([]*types.Tenant, int64, error) {
+	tenants, total, err := s.repo.ListPublicTenants(ctx, keyword, page, pageSize)
+	if err != nil {
+		logger.ErrorWithFields(ctx, err, map[string]interface{}{
+			"keyword":  keyword,
+			"page":     page,
+			"pageSize": pageSize,
+		})
+		return nil, 0, err
+	}
 	return tenants, total, nil
 }
 

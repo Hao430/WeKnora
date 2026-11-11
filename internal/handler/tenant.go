@@ -111,6 +111,8 @@ type updateTenantRequest struct {
 	Name *string `json:"name" binding:"omitempty,min=1,max=128" extensions:"x-agent"`
 	// New description, at most 512 characters; empty clears it. Omission preserves it.
 	Description *string `json:"description" binding:"omitempty,max=512" extensions:"x-agent"`
+	// Join-request discoverability switch (apply-to-join flow). Omission preserves it.
+	IsPublic *bool `json:"is_public" binding:"omitempty" extensions:"x-agent"`
 }
 
 type apiPrincipalConfigRequest struct {
@@ -590,8 +592,8 @@ func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 		c.Error(errors.NewValidationError("Invalid request data").WithDetails(err.Error()))
 		return
 	}
-	if req.Name == nil && req.Description == nil {
-		_ = c.Error(errors.NewValidationError("name or description is required"))
+	if req.Name == nil && req.Description == nil && req.IsPublic == nil {
+		_ = c.Error(errors.NewValidationError("name, description or is_public is required"))
 		return
 	}
 
@@ -608,7 +610,7 @@ func (h *TenantHandler) UpdateTenant(c *gin.Context) {
 		req.Description = &trimmed
 	}
 
-	updatedTenant, err := h.service.UpdateTenantProfile(ctx, id, req.Name, req.Description)
+	updatedTenant, err := h.service.UpdateTenantProfile(ctx, id, req.Name, req.Description, req.IsPublic)
 	if err != nil {
 		if appErr, ok := errors.IsAppError(err); ok {
 			logger.Error(ctx, "Failed to update workspace: application error", appErr)

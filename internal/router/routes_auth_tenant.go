@@ -45,6 +45,7 @@ func RegisterTenantRoutes(
 	handler *handler.TenantHandler,
 	memberHandler *handler.TenantMemberHandler,
 	invitationHandler *handler.TenantInvitationHandler,
+	joinRequestHandler *handler.TenantJoinRequestHandler,
 	auditLogHandler *handler.AuditLogHandler,
 	g *rbacGuards,
 ) {
@@ -60,6 +61,13 @@ func RegisterTenantRoutes(
 	// 空间路由组
 	tenantRoutes := r.Group("/tenants")
 	{
+		// Public tenant directory for the "apply to join" flow. Auth-only:
+		// any logged-in user can browse/search is_public tenants. Serves
+		// discoverability metadata only — content access still requires
+		// membership. nil-skip mirrors the invitation registration below.
+		if joinRequestHandler != nil {
+			tenantRoutes.GET("/public", joinRequestHandler.ListPublicTenants)
+		}
 		// Current-workspace operations cannot select another tenant, including
 		// when the caller has cross-tenant privileges. JWT-only for now.
 		tenantRoutes.GET("/current", g.Viewer(), handler.GetCurrentWorkspace)
@@ -143,6 +151,17 @@ func RegisterTenantRoutes(
 				g.apiKeyRoute(tenantByID, http.MethodPost, "/invite-links", apiKeyManageMembers(apiKeyFullAccess()), g.Owner(), invitationHandler.CreateInviteLink)
 			}
 
+			// Join-request history for the tenant management view. The
+			// accept/decline ACTIONS live in the approver inbox
+			// (RegisterJoinRequestRoutes below); this tenant-scoped
+			// list is for browsing history. Viewer+ to read, matching
+			// /invitations; nil-skip mirrors the invitation block.
+			if joinRequestHandler != nil {
+				tenantByID.GET("/join-requests", g.Viewer(), joinRequestHandler.ListTenantJoinRequests)
+				tenantByID.POST("/join-requests/:req_id/accept", g.Admin(), joinRequestHandler.AcceptJoinRequest)
+				tenantByID.POST("/join-requests/:req_id/decline", g.Admin(), joinRequestHandler.DeclineJoinRequest)
+			}
+
 			// Audit log feed (PR 6 of #1303). Admin+ so denied-action
 			// histories don't surface to ordinary members; the
 			// PathTenantMatch group already prevents cross-tenant
@@ -180,6 +199,28 @@ func RegisterMyInvitationRoutes(r *gin.RouterGroup, invitationHandler *handler.T
 		me.POST("/invitations/:inv_id/decline", invitationHandler.DeclineMyInvitation)
 		// 已登录用户用共享链接 token 加入空间（对应 register-by-invite，但不建新账号）。
 		me.POST("/invitations/accept-by-token", invitationHandler.AcceptMyInvitationByToken)
+	}
+}
+
+// RegisterJoinRequestRoutes wires the join-request self-service and
+// approver-inbox endpoints under /tenant-join-requests. The v1 group
+// already applies middleware.Auth; role rules live in the service:
+// withdraw is requester-only, and the inbox/count endpoints scope to
+// the tenants the caller actively Owner/admins (the handler filters
+// memberships, so no route gate is needed). Tenant-scoped accept and
+// decline additionally live under /tenants/:id/join-requests with an
+// Admin+ gate (see RegisterTenantRoutes).
+func RegisterJoinRequestRoutes(r *gin.RouterGroup, joinRequestHandler *handler.TenantJoinRequestHandler) {
+	if joinRequestHandler == nil {
+		return
+	}
+	jr := r.Group("/tenant-join-requests")
+	{
+		jr.POST("", joinRequestHandler.CreateJoinRequest)
+		jr.GET("/mine", joinRequestHandler.ListMyJoinRequests)
+		jr.DELETE("/:id", joinRequestHandler.WithdrawMyJoinRequest)
+		jr.GET("/inbox", joinRequestHandler.ListApproverInbox)
+		jr.GET("/pending-count", joinRequestHandler.CountPendingJoinRequests)
 	}
 }
 

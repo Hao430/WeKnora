@@ -121,7 +121,7 @@ func TestUpdateTenantProfileAndChatHistoryConfigPreserveEachOther(t *testing.T) 
 			repo := NewTenantRepository(db)
 			name, description := "renamed workspace", ""
 			updateProfile := func() {
-				require.NoError(t, repo.UpdateTenantProfile(t.Context(), 1, &name, &description))
+				require.NoError(t, repo.UpdateTenantProfile(t.Context(), 1, &name, &description, nil))
 			}
 			clearHistory := func() {
 				require.NoError(t, repo.SetChatHistoryConfig(t.Context(), 1,

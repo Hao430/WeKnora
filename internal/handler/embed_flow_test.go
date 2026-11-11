@@ -377,6 +377,6 @@ type badReader struct{}
 
 func (badReader) Read([]byte) (int, error) { return 0, io.ErrUnexpectedEOF }
 
-func (f *flowTenantSvc) UpdateTenantProfile(context.Context, uint64, *string, *string) (*types.Tenant, error) {
+func (f *flowTenantSvc) UpdateTenantProfile(context.Context, uint64, *string, *string, *bool) (*types.Tenant, error) {
 	panic("unexpected UpdateTenantProfile call")
 }

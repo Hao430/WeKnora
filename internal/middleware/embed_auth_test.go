@@ -169,6 +169,10 @@ func (f *fakeTenantService) BulkSetStorageQuota(ctx context.Context, quotaBytes 
 	return 0, nil
 }
 
+func (f *fakeTenantService) ListPublicTenants(context.Context, string, int, int) ([]*types.Tenant, int64, error) {
+	return nil, 0, nil
+}
+
 func (f *fakeTenantService) SearchTenants(
 	ctx context.Context, keyword string, tenantID uint64, page, pageSize int,
 ) ([]*types.Tenant, int64, error) {
@@ -555,6 +559,6 @@ func TestEmbedAuthHostAllowlist(t *testing.T) {
 	}
 }
 
-func (f *fakeTenantService) UpdateTenantProfile(context.Context, uint64, *string, *string) (*types.Tenant, error) {
+func (f *fakeTenantService) UpdateTenantProfile(context.Context, uint64, *string, *string, *bool) (*types.Tenant, error) {
 	panic("unexpected UpdateTenantProfile call")
 }
