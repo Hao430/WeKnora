@@ -110,12 +110,12 @@
           <span>{{ $t('tenantMember.title') }}</span>
         </div>
         -->
-        <!-- 申请加入空间：公开空间目录 + 我的申请。对全部登录用户开放；
-             目录数据由后端 is_public 白名单过滤。 -->
+        <!-- 2026-11-11 已移到头像菜单的空间子菜单「创建新空间」下方，这里先注释保留。
         <div class="menu-item" @click="openJoinSpaceDialog">
           <t-icon name="add-circle" class="menu-icon" />
           <span>{{ $t('joinSpace.title') }}</span>
         </div>
+        -->
         <!-- 2026-11-11 精简主菜单：模型管理已收进「全部设置 → 模型」，这里先注释保留。
         <div v-if="canManageModels" class="menu-item" @click="handleQuickNav('models')">
           <t-icon name="control-platform" class="menu-icon" />
@@ -195,6 +195,11 @@
         <div v-if="authStore.canCreateTenant" class="tenant-submenu-create" @click="openCreateTenantDialog">
           <t-icon name="add" class="tenant-submenu-create-icon" />
           <span class="tenant-submenu-create-label">{{ $t('tenant.create.action') }}</span>
+        </div>
+        <!-- 申请加入空间：公开空间目录，对全部登录用户开放。位置紧随「创建新空间」。 -->
+        <div class="tenant-submenu-create tenant-submenu-join" @click="openJoinSpaceDialog">
+          <t-icon name="add-circle" class="tenant-submenu-create-icon" />
+          <span class="tenant-submenu-create-label">{{ $t('joinSpace.title') }}</span>
         </div>
       </div>
     </Teleport>
@@ -333,6 +338,7 @@ const closeAll = () => {
 const createTenantDialogVisible = ref(false)
 const joinSpaceDialogVisible = ref(false)
 const openJoinSpaceDialog = () => {
+  closeAll()
   joinSpaceDialogVisible.value = true
 }
 
@@ -1262,6 +1268,12 @@ onUnmounted(() => {
       text-overflow: ellipsis;
       font-size: var(--app-text-sm);
     }
+  }
+
+  /* Second action under 创建新空间: keep one separator, not two. */
+  .tenant-submenu-create + .tenant-submenu-join {
+    margin-top: 0;
+    border-top: 0;
   }
 }
 </style>
