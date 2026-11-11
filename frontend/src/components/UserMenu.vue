@@ -106,6 +106,12 @@
           <t-icon name="usergroup" class="menu-icon" />
           <span>{{ $t('tenantMember.title') }}</span>
         </div>
+        <!-- 申请加入空间：公开空间目录 + 我的申请。对全部登录用户开放；
+             目录数据由后端 is_public 白名单过滤。 -->
+        <div class="menu-item" @click="openJoinSpaceDialog">
+          <t-icon name="add-circle" class="menu-icon" />
+          <span>{{ $t('joinSpace.title') }}</span>
+        </div>
         <div v-if="canManageModels" class="menu-item" @click="handleQuickNav('models')">
           <t-icon name="control-platform" class="menu-icon" />
           <span>{{ $t('settings.modelManagement') }}</span>
@@ -189,6 +195,7 @@
 
     <!-- 创建工作区弹窗 -->
     <CreateTenantDialog v-model:visible="createTenantDialogVisible" @created="onTenantCreated" />
+    <JoinSpaceDialog v-model:visible="joinSpaceDialogVisible" />
   </div>
 </template>
 
@@ -201,6 +208,7 @@ import { MessagePlugin } from 'tdesign-vue-next'
 import { logout as logoutApi } from '@/api/auth'
 import { useI18n } from 'vue-i18n'
 import CreateTenantDialog from '@/components/CreateTenantDialog.vue'
+import JoinSpaceDialog from '@/components/JoinSpaceDialog.vue'
 import GlobalInvitationBell from '@/components/GlobalInvitationBell.vue'
 import {
   navigateAfterTenantSwitch,
@@ -317,6 +325,10 @@ const closeAll = () => {
 // 同款的 setSelectedTenant + navigateAfterTenantSwitch 链路，避免 token
 // 依然指向旧空间带来的 SSE / store 不一致。
 const createTenantDialogVisible = ref(false)
+const joinSpaceDialogVisible = ref(false)
+const openJoinSpaceDialog = () => {
+  joinSpaceDialogVisible.value = true
+}
 
 const openCreateTenantDialog = () => {
   closeAll()

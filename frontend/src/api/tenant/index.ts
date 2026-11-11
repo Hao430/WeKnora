@@ -10,6 +10,9 @@ export interface TenantInfo {
   description?: string
   status?: string
   business?: string
+  // Join-request discoverability switch (apply-to-join flow). Omitted
+  // by older payloads; treat undefined as false.
+  is_public?: boolean
   storage_quota?: number
   storage_used?: number
   created_at: string
@@ -275,7 +278,7 @@ export async function deleteTenantAPIKey(
  */
 export async function updateTenant(
   tenantId: number,
-  payload: { name?: string; description?: string },
+  payload: { name?: string; description?: string; is_public?: boolean },
 ): Promise<{ success: boolean; data?: TenantInfo; message?: string }> {
   try {
     const response = await put(`/api/v1/tenants/${tenantId}`, payload)

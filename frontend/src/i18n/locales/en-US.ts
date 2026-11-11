@@ -4820,7 +4820,12 @@ export default {
       editDescriptionPlaceholder: 'Enter the new workspace description',
       editDescriptionSuccess: 'Workspace description updated',
       editDescriptionFailed: 'Failed to update workspace description',
-      descriptionEmptyPlaceholder: 'Not set'
+      descriptionEmptyPlaceholder: 'Not set',
+      isPublicLabel: 'Public Workspace',
+      isPublicDescription: 'When enabled, this workspace appears in the public directory and signed-in users can request to join; content stays members-only',
+      isPublicOn: 'Public workspace enabled',
+      isPublicOff: 'Public workspace disabled',
+      isPublicUpdateFailed: 'Failed to update public status'
     },
     storage: {
       quotaLabel: 'Storage Quota',
@@ -4879,6 +4884,46 @@ export default {
       lanUrlCopyTitle: 'Copy LAN API URL',
       lanUrlUnavailable: 'The API is listening on all interfaces, but no LAN IPv4 could be detected automatically. Find your IPv4 in network settings and build http://YOUR_IP:PORT/api/v1 manually.'
     }
+  },
+  joinSpace: {
+      title: 'Join a Space',
+      searchPlaceholder: 'Search public workspaces',
+      empty: 'No public workspaces found',
+      memberCount: '{count} members',
+      noDescription: 'No description',
+      applyButton: 'Apply to Join',
+      pendingTag: 'Pending',
+      messagePrompt: 'Enter your reason (required):',
+      applySuccess: 'Join request submitted for {name}',
+      myRequestsTitle: 'My Requests',
+      myRequestsEmpty: 'No requests yet',
+      withdrawButton: 'Withdraw',
+      withdrawSuccess: 'Request withdrawn',
+      status: {
+        pending: 'Pending',
+        accepted: 'Approved',
+        declined: 'Rejected',
+        withdrawn: 'Withdrawn',
+        expired: 'Expired'
+      },
+      approvals: {
+        title: 'Join Request Approvals',
+        description: 'These users are requesting to join a workspace you manage:',
+        empty: 'No pending requests',
+        pendingLabel: '{count} pending join requests',
+        acceptButton: 'Accept',
+        declineButton: 'Decline',
+        acceptSuccess: '{name} has joined the workspace',
+        declineSuccess: 'Request declined'
+      },
+      errors: {
+        generic: 'Operation failed, please try again',
+        notPublic: 'This workspace does not accept join requests',
+        conflict: 'A pending request or invitation already exists',
+        forbidden: 'Not allowed to perform this action',
+        notPending: 'This request has already been handled',
+        notFound: 'Request not found'
+      }
   },
   system: {
     title: 'System Information',

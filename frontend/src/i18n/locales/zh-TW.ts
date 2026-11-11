@@ -5136,7 +5136,12 @@ export default {
       editDescriptionPlaceholder: '請輸入新的空間描述',
       editDescriptionSuccess: '空間描述已更新',
       editDescriptionFailed: '更新空間描述失敗',
-      descriptionEmptyPlaceholder: '未填寫'
+      descriptionEmptyPlaceholder: '未填寫',
+      isPublicLabel: '公開空間',
+      isPublicDescription: '開啟後空間會出現在公開目錄，站內使用者可搜尋並申請加入；空間內容仍僅成員可見',
+      isPublicOn: '已開啟公開空間',
+      isPublicOff: '已關閉公開空間',
+      isPublicUpdateFailed: '更新公開狀態失敗'
     },
     create: {
       action: '建立新空間',
@@ -5159,6 +5164,46 @@ export default {
       homeTooltip: '我的空間',
       empty: '你目前只屬於這一個空間'
     }
+  },
+  joinSpace: {
+      title: '申請加入空間',
+      searchPlaceholder: '搜尋公開空間',
+      empty: '找不到公開空間',
+      memberCount: '{count} 位成員',
+      noDescription: '暫無描述',
+      applyButton: '申請加入',
+      pendingTag: '申請待審',
+      messagePrompt: '請輸入申請理由（必填）：',
+      applySuccess: '已提交加入申請：{name}',
+      myRequestsTitle: '我的申請',
+      myRequestsEmpty: '暫無申請記錄',
+      withdrawButton: '撤回',
+      withdrawSuccess: '申請已撤回',
+      status: {
+        pending: '待審',
+        accepted: '已通過',
+        declined: '已拒絕',
+        withdrawn: '已撤回',
+        expired: '已過期'
+      },
+      approvals: {
+        title: '加入申請審批',
+        description: '以下使用者申請加入你管理的空間：',
+        empty: '暫無待審申請',
+        pendingLabel: '{count} 條待審加入申請',
+        acceptButton: '同意',
+        declineButton: '拒絕',
+        acceptSuccess: '已同意 {name} 加入空間',
+        declineSuccess: '已拒絕該申請'
+      },
+      errors: {
+        generic: '操作失敗，請稍後重試',
+        notPublic: '該空間不接受加入申請',
+        conflict: '已存在待處理的申請或邀請',
+        forbidden: '無權執行此操作',
+        notPending: '該申請已被處理',
+        notFound: '申請不存在'
+      }
   },
   chat: {
     memoryUsedCount: '本次使用了 {count} 條記憶',

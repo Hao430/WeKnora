@@ -110,6 +110,19 @@
           </div>
         </div>
 
+        <!-- 公开空间开关：申请加入流程的发现性开关。仅 Owner 可改
+             （PUT /tenants/:id 为 Owner+ 守卫）。开启后空间出现在
+             公开目录并可被站内用户申请加入；内容访问权限不变。 -->
+        <div v-if="canEditTenant" class="setting-row">
+          <div class="setting-info">
+            <label>{{ $t('tenant.details.isPublicLabel') }}</label>
+            <p class="desc">{{ $t('tenant.details.isPublicDescription') }}</p>
+          </div>
+          <div class="setting-control">
+            <t-switch :value="!!tenantInfo?.is_public" :loading="savingIsPublic" @change="onToggleIsPublic" />
+          </div>
+        </div>
+
         <!-- Tenant business -->
         <div v-if="tenantInfo?.business" class="setting-row">
           <div class="setting-info">
@@ -273,6 +286,28 @@ const error = ref('')
 // 仅 owner 可改空间名（与后端 router.go 中 g.Owner() 守卫一致；
 // 服务端始终是权限的最终裁判，这里只决定 UI 是否露出入口）。
 const canEditTenant = computed(() => authStore.hasRole('owner'))
+
+// 公开空间开关：乐观更新，失败回滚并提示。
+const savingIsPublic = ref(false)
+const onToggleIsPublic = async (next: boolean) => {
+  if (!tenantInfo.value?.id || savingIsPublic.value) return
+  savingIsPublic.value = true
+  try {
+    const resp = await updateTenantApi(Number(tenantInfo.value.id), { is_public: next })
+    if (resp.success) {
+      if (tenantInfo.value) {
+        tenantInfo.value = { ...tenantInfo.value, is_public: next }
+      }
+      MessagePlugin.success(t(next ? 'tenant.details.isPublicOn' : 'tenant.details.isPublicOff'))
+    } else {
+      MessagePlugin.error(resp.message || t('tenant.details.isPublicUpdateFailed'))
+    }
+  } catch (err: any) {
+    MessagePlugin.error(err?.message || t('tenant.details.isPublicUpdateFailed'))
+  } finally {
+    savingIsPublic.value = false
+  }
+}
 
 /** 与原 TenantMembers.vue 一致：最后一位 Owner 不展示退出，避免与服务端 last-owner 对齐失败。 */
 const activeTenantNumericId = computed(() => Number(authStore.currentTenantId ?? 0))

@@ -4820,7 +4820,12 @@ export default {
       editDescriptionPlaceholder: '新しいワークスペースの説明を入力してください',
       editDescriptionSuccess: 'ワークスペースの説明を更新しました',
       editDescriptionFailed: 'ワークスペースの説明の更新に失敗しました',
-      descriptionEmptyPlaceholder: '未設定'
+      descriptionEmptyPlaceholder: '未設定',
+      isPublicLabel: '公開ワークスペース',
+      isPublicDescription: '有効にすると公開ディレクトリに表示され、サインイン済みユーザーが参加を申請できます。内容は引き続きメンバーのみ閲覧可能です',
+      isPublicOn: '公開ワークスペースを有効にしました',
+      isPublicOff: '公開ワークスペースを無効にしました',
+      isPublicUpdateFailed: '公開状態の更新に失敗しました'
     },
     storage: {
       quotaLabel: 'ストレージクォータ',
@@ -4879,6 +4884,46 @@ export default {
       lanUrlCopyTitle: 'LAN用API URLをコピー',
       lanUrlUnavailable: 'APIはすべてのインターフェースでリッスンしていますが、LANのIPv4アドレスを自動検出できませんでした。ネットワーク設定でIPv4アドレスを確認し、http://YOUR_IP:PORT/api/v1の形式で手動で組み立ててください。'
     }
+  },
+  joinSpace: {
+      title: 'ワークスペースへの参加申請',
+      searchPlaceholder: '公開ワークスペースを検索',
+      empty: '公開ワークスペースが見つかりません',
+      memberCount: '{count} 人のメンバー',
+      noDescription: '説明なし',
+      applyButton: '参加を申請',
+      pendingTag: '審査中',
+      messagePrompt: '申請理由を入力してください（必須）：',
+      applySuccess: '参加申請を送信しました：{name}',
+      myRequestsTitle: '自分の申請',
+      myRequestsEmpty: '申請履歴はありません',
+      withdrawButton: '取り下げ',
+      withdrawSuccess: '申請を取り下げました',
+      status: {
+        pending: '審査中',
+        accepted: '承認済み',
+        declined: '却下',
+        withdrawn: '取り下げ',
+        expired: '期限切れ'
+      },
+      approvals: {
+        title: '参加申請の承認',
+        description: '以下のユーザーが管理中のワークスペースへの参加を申請しています：',
+        empty: '承認待ちの申請はありません',
+        pendingLabel: '{count} 件の承認待ち申請',
+        acceptButton: '承認',
+        declineButton: '却下',
+        acceptSuccess: '{name} の参加を承認しました',
+        declineSuccess: '申請を却下しました'
+      },
+      errors: {
+        generic: '操作に失敗しました。後でもう一度お試しください',
+        notPublic: 'このワークスペースは参加申請を受け付けていません',
+        conflict: '処理中の申請または招待が既に存在します',
+        forbidden: 'この操作を実行する権限がありません',
+        notPending: 'この申請は既に処理されています',
+        notFound: '申請が見つかりません'
+      }
   },
   system: {
     title: 'システム情報',

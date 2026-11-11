@@ -93,6 +93,7 @@ async function loadPolicy() {
       return
     }
     await authStore.fetchPendingInvitationCount()
+    await authStore.fetchPendingJoinRequestCount()
   } finally {
     policyLoading.value = false
   }

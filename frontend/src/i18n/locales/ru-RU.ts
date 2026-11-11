@@ -5134,7 +5134,12 @@ export default {
       editDescriptionPlaceholder: 'Введите новое описание пространства',
       editDescriptionSuccess: 'Описание пространства обновлено',
       editDescriptionFailed: 'Не удалось обновить описание пространства',
-      descriptionEmptyPlaceholder: 'Не указано'
+      descriptionEmptyPlaceholder: 'Не указано',
+      isPublicLabel: 'Публичное пространство',
+      isPublicDescription: 'После включения пространство появится в публичном каталоге, и авторизованные пользователи смогут подать заявку на вступление; доступ к содержимому останется только у участников',
+      isPublicOn: 'Публичное пространство включено',
+      isPublicOff: 'Публичное пространство выключено',
+      isPublicUpdateFailed: 'Не удалось обновить статус публичности'
     },
     create: {
       action: 'Создать новое рабочее пространство',
@@ -5157,6 +5162,46 @@ export default {
       homeTooltip: 'Ваше основное рабочее пространство',
       empty: 'Вы состоите только в одном рабочем пространстве'
     }
+  },
+  joinSpace: {
+      title: 'Заявка на вступление в пространство',
+      searchPlaceholder: 'Поиск публичных пространств',
+      empty: 'Публичные пространства не найдены',
+      memberCount: '{count} участников',
+      noDescription: 'Без описания',
+      applyButton: 'Подать заявку',
+      pendingTag: 'На рассмотрении',
+      messagePrompt: 'Укажите причину заявки (обязательно):',
+      applySuccess: 'Заявка отправлена: {name}',
+      myRequestsTitle: 'Мои заявки',
+      myRequestsEmpty: 'Заявок пока нет',
+      withdrawButton: 'Отозвать',
+      withdrawSuccess: 'Заявка отозвана',
+      status: {
+        pending: 'На рассмотрении',
+        accepted: 'Одобрено',
+        declined: 'Отклонено',
+        withdrawn: 'Отозвано',
+        expired: 'Истекло'
+      },
+      approvals: {
+        title: 'Рассмотрение заявок на вступление',
+        description: 'Эти пользователи просят вступить в пространство, которым вы управляете:',
+        empty: 'Нет заявок на рассмотрении',
+        pendingLabel: '{count} заявок на рассмотрении',
+        acceptButton: 'Одобрить',
+        declineButton: 'Отклонить',
+        acceptSuccess: '{name} присоединился к пространству',
+        declineSuccess: 'Заявка отклонена'
+      },
+      errors: {
+        generic: 'Не удалось выполнить операцию, попробуйте позже',
+        notPublic: 'Это пространство не принимает заявки на вступление',
+        conflict: 'Заявка или приглашение уже находятся в ожидании',
+        forbidden: 'Недостаточно прав для этого действия',
+        notPending: 'Заявка уже обработана',
+        notFound: 'Заявка не найдена'
+      }
   },
   chat: {
     memoryUsedCount: 'Использовано записей памяти: {count}',

@@ -5143,7 +5143,12 @@ export default {
       editDescriptionPlaceholder: '请输入新的空间描述',
       editDescriptionSuccess: '空间描述已更新',
       editDescriptionFailed: '更新空间描述失败',
-      descriptionEmptyPlaceholder: '未填写'
+      descriptionEmptyPlaceholder: '未填写',
+      isPublicLabel: '公开空间',
+      isPublicDescription: '开启后空间会出现在公开目录，站内用户可搜索并申请加入；空间内容仍仅成员可见',
+      isPublicOn: '已开启公开空间',
+      isPublicOff: '已关闭公开空间',
+      isPublicUpdateFailed: '更新公开状态失败'
     },
     create: {
       action: '创建新空间',
@@ -5166,6 +5171,46 @@ export default {
       homeTooltip: '我的空间',
       empty: '你目前只属于这一个空间'
     }
+  },
+  joinSpace: {
+      title: '申请加入空间',
+      searchPlaceholder: '搜索公开空间',
+      empty: '没有找到公开空间',
+      memberCount: '{count} 名成员',
+      noDescription: '暂无描述',
+      applyButton: '申请加入',
+      pendingTag: '申请待审',
+      messagePrompt: '请输入申请理由（必填）：',
+      applySuccess: '已提交加入申请：{name}',
+      myRequestsTitle: '我的申请',
+      myRequestsEmpty: '暂无申请记录',
+      withdrawButton: '撤回',
+      withdrawSuccess: '申请已撤回',
+      status: {
+        pending: '待审',
+        accepted: '已通过',
+        declined: '已拒绝',
+        withdrawn: '已撤回',
+        expired: '已过期'
+      },
+      approvals: {
+        title: '加入申请审批',
+        description: '以下用户申请加入你管理的空间：',
+        empty: '暂无待审申请',
+        pendingLabel: '{count} 条待审加入申请',
+        acceptButton: '同意',
+        declineButton: '拒绝',
+        acceptSuccess: '已同意 {name} 加入空间',
+        declineSuccess: '已拒绝该申请'
+      },
+      errors: {
+        generic: '操作失败，请稍后重试',
+        notPublic: '该空间不接受加入申请',
+        conflict: '已存在待处理的申请或邀请',
+        forbidden: '无权执行此操作',
+        notPending: '该申请已被处理',
+        notFound: '申请不存在'
+      }
   },
   chat: {
     memoryUsedCount: '本次使用了 {count} 条记忆',

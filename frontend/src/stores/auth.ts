@@ -55,6 +55,11 @@ export const useAuthStore = defineStore('auth', () => {
   // (vs SSE) is fine — the count is checked rarely and a 1-2 minute
   // staleness window is acceptable for an inbox indicator.
   const pendingInvitationCount = ref<number>(0)
+  // pendingJoinRequestCount is the number of pending join requests
+  // across the tenants the current user actively Owner/admins — the
+  // approver-side counterpart of pendingInvitationCount. Same polling
+  // and staleness semantics.
+  const pendingJoinRequestCount = ref<number>(0)
   // Authoritative deployment capability returned by /auth/me. Defaults to
   // false (fail-closed): we hide the "create workspace" affordance until
   // /auth/me confirms the deployment allows it, so an invitation-only
@@ -312,6 +317,10 @@ export const useAuthStore = defineStore('auth', () => {
     pendingInvitationCount.value = Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0
   }
 
+  const setPendingJoinRequestCount = (n: number) => {
+    pendingJoinRequestCount.value = Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0
+  }
+
   const setCanCreateTenant = (allowed: boolean) => {
     canCreateTenant.value = allowed
   }
@@ -335,6 +344,21 @@ export const useAuthStore = defineStore('auth', () => {
       const resp = await getMyPendingInvitationCount()
       if (resp.success && resp.data) {
         setPendingInvitationCount(resp.data.pending_count)
+      }
+    } catch {
+      // best-effort; keep last known value
+    }
+  }
+
+  // fetchPendingJoinRequestCount mirrors fetchPendingInvitationCount
+  // for the approver inbox badge. Fires alongside the invitation
+  // count wherever that one runs.
+  const fetchPendingJoinRequestCount = async () => {
+    try {
+      const { getPendingJoinRequestCount } = await import('@/api/tenant/joinRequests')
+      const resp = await getPendingJoinRequestCount()
+      if (resp.success && resp.data) {
+        setPendingJoinRequestCount(resp.data.pending_count)
       }
     } catch {
       // best-effort; keep last known value
@@ -463,6 +487,7 @@ export const useAuthStore = defineStore('auth', () => {
     allTenants.value = []
     memberships.value = []
     pendingInvitationCount.value = 0
+    pendingJoinRequestCount.value = 0
     canCreateTenant.value = false
     autoAcceptInvitation.value = false
     authMeSynced = false
@@ -590,6 +615,7 @@ export const useAuthStore = defineStore('auth', () => {
     allTenants,
     memberships,
     pendingInvitationCount,
+    pendingJoinRequestCount,
     canCreateTenant,
     autoAcceptInvitation,
 
@@ -617,9 +643,11 @@ export const useAuthStore = defineStore('auth', () => {
     setAllTenants,
     setMemberships,
     setPendingInvitationCount,
+    setPendingJoinRequestCount,
     setCanCreateTenant,
     setAutoAcceptInvitation,
     fetchPendingInvitationCount,
+    fetchPendingJoinRequestCount,
     refreshFromAuthMe,
     ensureAuthMe,
     acceptInvitationByTokenAndRefresh,

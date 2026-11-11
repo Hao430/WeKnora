@@ -17,6 +17,16 @@
         <div class="notification-panel__scroll">
           <section v-if="pendingCount" class="notification-panel__pending">
             <h3>{{ t('notifications.pending') }}<span>{{ pendingCount }}</span></h3>
+            <button v-if="pendingJoinRequestCount > 0" type="button" class="notification-task" @click="openJoinApprovals">
+              <span class="notification-item__body">
+                <span class="notification-item__heading">
+                  <t-icon name="assignment" size="16px" class="notification-task__icon" />
+                  <span class="notification-item__title">{{ t('joinSpace.approvals.title') }}</span>
+                </span>
+                <span class="notification-item__text">{{ t('joinSpace.approvals.pendingLabel', { count: pendingJoinRequestCount }) }}</span>
+                <span class="notification-task__action">{{ t('notifications.handle') }}<t-icon name="chevron-right" size="12px" /></span>
+              </span>
+            </button>
             <button v-if="pendingInvitationCount > 0" type="button" class="notification-task" @click="openInvitations">
               <span class="notification-item__body">
                 <span class="notification-item__heading">
@@ -78,6 +88,7 @@
     </template>
   </t-popup>
   <MyInvitationsDialog v-model:visible="dialogVisible" />
+  <JoinRequestApprovalsDialog v-model:visible="joinApprovalsVisible" />
   <Teleport to="body">
     <TransitionGroup name="notification-banner" tag="div" class="notification-banners" aria-live="polite"
       :aria-label="t('notifications.title')" @mouseenter="setBannerHover(true)" @mouseleave="setBannerHover(false)"
@@ -116,6 +127,7 @@ import { useI18n } from 'vue-i18n'
 import { MessagePlugin } from 'tdesign-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import MyInvitationsDialog from '@/components/MyInvitationsDialog.vue'
+import JoinRequestApprovalsDialog from '@/components/JoinRequestApprovalsDialog.vue'
 import { notificationPreview } from '@/utils/notificationPreview'
 import { clearReadNotifications, listNotifications, markNotificationsRead, type AppNotification, type NotificationPage, type PendingNotification } from '@/api/automation'
 
@@ -124,11 +136,14 @@ const authStore = useAuthStore()
 const router = useRouter()
 const { t, te, locale } = useI18n()
 const pendingInvitationCount = computed(() => authStore.pendingInvitationCount)
+const pendingJoinRequestCount = computed(() => authStore.pendingJoinRequestCount)
 const items = ref<AppNotification[]>([])
 const pending = ref<PendingNotification[]>([])
 const unread = ref(0)
 const readCount = ref(0)
-const pendingCount = computed(() => pendingInvitationCount.value + pending.value.length)
+const pendingCount = computed(
+  () => pendingInvitationCount.value + pendingJoinRequestCount.value + pending.value.length,
+)
 const badgeCount = computed(() => pendingCount.value + unread.value)
 const nextCursor = ref('')
 const historyExpanded = ref(false)
@@ -137,6 +152,7 @@ const loading = ref(false)
 const busy = ref(false)
 const loadError = ref<'' | 'refresh' | 'more'>('')
 const dialogVisible = ref(false)
+const joinApprovalsVisible = ref(false)
 const panelVisible = ref(false)
 let version = 0
 let timer: ReturnType<typeof setInterval> | undefined
@@ -332,6 +348,7 @@ const bannerTime = (iso: string) => {
   }).format(date)
 }
 const openInvitations = () => { panelVisible.value = false; dialogVisible.value = true }
+const openJoinApprovals = () => { panelVisible.value = false; joinApprovalsVisible.value = true }
 function navigate(link: string) {
   panelVisible.value = false
   if (link.startsWith('/') && !link.startsWith('//')) void router.push(link)

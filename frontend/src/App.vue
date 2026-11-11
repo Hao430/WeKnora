@@ -242,9 +242,11 @@ const startInvitationPolling = () => {
   if (invitationPollTimer || !authStore.isLoggedIn) return
   // Immediate fetch so the badge is correct before the first tick.
   authStore.fetchPendingInvitationCount()
+  authStore.fetchPendingJoinRequestCount()
   invitationPollTimer = setInterval(() => {
     if (!authStore.isLoggedIn) return
     authStore.fetchPendingInvitationCount()
+    authStore.fetchPendingJoinRequestCount()
   }, INVITATION_POLL_INTERVAL_MS)
 }
 

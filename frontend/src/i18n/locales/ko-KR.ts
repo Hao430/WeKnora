@@ -5134,7 +5134,12 @@ export default {
       editDescriptionPlaceholder: '새 워크스페이스 설명을 입력하세요',
       editDescriptionSuccess: '워크스페이스 설명이 업데이트되었습니다',
       editDescriptionFailed: '워크스페이스 설명 업데이트 실패',
-      descriptionEmptyPlaceholder: '미입력'
+      descriptionEmptyPlaceholder: '미입력',
+      isPublicLabel: '공개 워크스페이스',
+      isPublicDescription: '활성화하면 공개 디렉터리에 표시되고 로그인한 사용자가 가입을 신청할 수 있습니다. 콘텐츠는 계속 멤버만 볼 수 있습니다',
+      isPublicOn: '공개 워크스페이스가 활성화되었습니다',
+      isPublicOff: '공개 워크스페이스가 비활성화되었습니다',
+      isPublicUpdateFailed: '공개 상태 업데이트 실패'
     },
     create: {
       action: '새 워크스페이스 만들기',
@@ -5157,6 +5162,46 @@ export default {
       homeTooltip: '기본 워크스페이스',
       empty: '현재 하나의 워크스페이스에만 속해 있습니다'
     }
+  },
+  joinSpace: {
+      title: '워크스페이스 가입 신청',
+      searchPlaceholder: '공개 워크스페이스 검색',
+      empty: '공개 워크스페이스를 찾을 수 없습니다',
+      memberCount: '{count}명의 멤버',
+      noDescription: '설명 없음',
+      applyButton: '가입 신청',
+      pendingTag: '심사 중',
+      messagePrompt: '신청 사유를 입력하세요(필수):',
+      applySuccess: '가입 신청이 제출되었습니다: {name}',
+      myRequestsTitle: '내 신청',
+      myRequestsEmpty: '신청 기록이 없습니다',
+      withdrawButton: '철회',
+      withdrawSuccess: '신청이 철회되었습니다',
+      status: {
+        pending: '심사 중',
+        accepted: '승인됨',
+        declined: '거절됨',
+        withdrawn: '철회됨',
+        expired: '만료됨'
+      },
+      approvals: {
+        title: '가입 신청 승인',
+        description: '다음 사용자가 관리 중인 워크스페이스 가입을 신청했습니다:',
+        empty: '승인 대기 중인 신청이 없습니다',
+        pendingLabel: '{count}건의 승인 대기 신청',
+        acceptButton: '승인',
+        declineButton: '거절',
+        acceptSuccess: '{name}님의 가입을 승인했습니다',
+        declineSuccess: '신청을 거절했습니다'
+      },
+      errors: {
+        generic: '작업에 실패했습니다. 다시 시도해 주세요',
+        notPublic: '이 워크스페이스는 가입 신청을 받지 않습니다',
+        conflict: '처리 대기 중인 신청 또는 초대가 이미 있습니다',
+        forbidden: '이 작업을 수행할 권한이 없습니다',
+        notPending: '이 신청은 이미 처리되었습니다',
+        notFound: '신청을 찾을 수 없습니다'
+      }
   },
   chat: {
     memoryUsedCount: '기억 {count}개를 참고했습니다',
