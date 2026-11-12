@@ -331,6 +331,17 @@
         </div>
       </div>
     </div>
+
+    <!-- 备案信息：按部署方要求展示，全文固定中文，不参与语言切换。 -->
+    <div class="login-footer">
+      <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="login-footer-link">
+        黔ICP备19003726号-1
+      </a>
+      <a href="https://beian.mps.gov.cn/#/query/webSearch?code=52011502002024" target="_blank"
+        rel="noopener noreferrer" class="login-footer-link">
+        贵公网安备 52011502002024号
+      </a>
+    </div>
   </div>
 </template>
 
@@ -1248,6 +1259,30 @@ onMounted(async () => {
 }
 
 /* Bottom Form Section */
+.login-footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 16px;
+  padding: 0 16px 18px;
+  font-size: var(--app-text-xs);
+  color: rgba(255, 255, 255, 0.72);
+
+  .login-footer-link {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+  }
+}
+
 .form-section {
   flex: 0 0 auto;
   display: flex;
