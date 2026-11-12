@@ -210,6 +210,7 @@ func (s *dingTalkDirectoryService) upsertMember(
 				ProviderTenant: s.corpID,
 				Subject:        profile.UnionID,
 				ExternalID:     strings.TrimSpace(profile.UserID),
+				DisplayName:    strings.TrimSpace(profile.Nick),
 			}
 			if createErr := s.identities.Create(ctx, identity); createErr != nil {
 				if !errors.Is(createErr, apprepo.ErrIdentityAlreadyBound) {
@@ -256,12 +257,20 @@ func (s *dingTalkDirectoryService) reactivateAndEnroll(
 		return directoryOutcomeRestored, nil
 	}
 
-	// Backfill the userid on identities bound by the login flow, so the leave
-	// event can resolve this member later.
+	// Backfill the userid and nickname on identities bound by the login flow,
+	// so leave events resolve this member and the profile page has a name.
+	changed := false
 	if strings.TrimSpace(identity.ExternalID) == "" && strings.TrimSpace(profile.UserID) != "" {
 		identity.ExternalID = strings.TrimSpace(profile.UserID)
+		changed = true
+	}
+	if strings.TrimSpace(identity.DisplayName) == "" && strings.TrimSpace(profile.Nick) != "" {
+		identity.DisplayName = strings.TrimSpace(profile.Nick)
+		changed = true
+	}
+	if changed {
 		if err := s.identities.Update(ctx, identity); err != nil {
-			logger.Warnf(ctx, "[DingTalk] backfill userid for identity %d failed: %v", identity.ID, err)
+			logger.Warnf(ctx, "[DingTalk] backfill identity %d failed: %v", identity.ID, err)
 		}
 	}
 	return directoryOutcomeNone, s.enroll(ctx, user.ID, cfg)
@@ -306,6 +315,7 @@ func (s *dingTalkDirectoryService) createMember(
 		ProviderTenant: s.corpID,
 		Subject:        profile.UnionID,
 		ExternalID:     strings.TrimSpace(profile.UserID),
+		DisplayName:    strings.TrimSpace(profile.Nick),
 	}
 	if err := s.identities.Create(ctx, identity); err != nil {
 		// Leave no orphan account behind if the binding lost a race.

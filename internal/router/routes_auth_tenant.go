@@ -302,6 +302,9 @@ func RegisterAuthRoutes(r *gin.RouterGroup, handler *handler.AuthHandler, g *rba
 	g.apiKeyRoute(r, http.MethodGet, "/auth/me", apiKeyAny(), handler.GetCurrentUser)
 	r.PUT("/auth/me/preferences", handler.UpdateMyPreferences)
 	r.POST("/auth/change-password", handler.ChangePassword)
+	// Bound external accounts: read-only, scoped to the caller. Used by the
+	// profile page to show "bound as <nickname>" instead of the bind button.
+	r.GET("/auth/identities", handler.GetMyIdentities)
 }
 
 // RegisterSystemRoutes registers system information routes

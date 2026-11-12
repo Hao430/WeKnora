@@ -121,3 +121,32 @@ func TestUserIdentityRepositoryExternalID(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "union-legacy", got.Subject)
 }
+
+func TestUserIdentityRepositoryDisplayName(t *testing.T) {
+	db := newUserIdentityTestDB(t)
+	repo := NewUserIdentityRepository(db)
+	users := NewUserRepository(db)
+	ctx := context.Background()
+
+	user := newDingTalkUser("u-ding-name", "13800000002@jgjl.cn")
+	require.NoError(t, users.CreateUser(ctx, user))
+
+	identity := newDingTalkIdentity(user.ID, "union-name")
+	identity.DisplayName = "张三"
+	require.NoError(t, repo.Create(ctx, identity))
+
+	got, err := repo.GetBySubject(ctx, types.IdentityProviderDingTalk, "corp-1", "union-name")
+	require.NoError(t, err)
+	assert.Equal(t, "张三", got.DisplayName)
+
+	// The directory sync backfills both external_id and display_name through
+	// the same Update; the projection shown in the profile must follow.
+	got.ExternalID = "dt-userid-name"
+	got.DisplayName = "张三（改）"
+	require.NoError(t, repo.Update(ctx, got))
+
+	reloaded, err := repo.GetBySubject(ctx, types.IdentityProviderDingTalk, "corp-1", "union-name")
+	require.NoError(t, err)
+	assert.Equal(t, "dt-userid-name", reloaded.ExternalID)
+	assert.Equal(t, "张三（改）", reloaded.DisplayName)
+}

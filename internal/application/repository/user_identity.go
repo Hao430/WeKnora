@@ -92,7 +92,10 @@ func (r *userIdentityRepository) Create(ctx context.Context, identity *types.Use
 func (r *userIdentityRepository) Update(ctx context.Context, identity *types.UserIdentity) error {
 	return r.db.WithContext(ctx).Model(&types.UserIdentity{}).
 		Where("id = ?", identity.ID).
-		Update("external_id", identity.ExternalID).Error
+		Updates(map[string]any{
+			"external_id":  identity.ExternalID,
+			"display_name": identity.DisplayName,
+		}).Error
 }
 
 // isDuplicateIdentity recognises the uniq_user_identity violation.

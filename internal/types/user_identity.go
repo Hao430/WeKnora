@@ -28,6 +28,9 @@ type UserIdentity struct {
 	// the corp-local userid, which directory events carry and the unionId
 	// does not. Empty for identities bound before directory sync existed.
 	ExternalID string `json:"external_id" gorm:"type:varchar(191);not null;default:''"`
+	// DisplayName is the provider-side nickname shown in the profile page
+	// ("bound as <name>"). Empty for bindings created before it was stored.
+	DisplayName string `json:"display_name" gorm:"type:varchar(191);not null;default:''"`
 	// CreatedAt is the first binding time.
 	CreatedAt time.Time `json:"created_at"`
 	// UpdatedAt is the last binding time.

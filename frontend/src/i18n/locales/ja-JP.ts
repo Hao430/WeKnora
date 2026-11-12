@@ -3083,6 +3083,8 @@ export default {
     redirectingToDingTalk: 'DingTalk にリダイレクトしています...',
     dingtalkLoginFailed: 'DingTalk サインインに失敗しました',
     dingtalkBind: 'DingTalk アカウントを連携',
+    dingtalkBound: '連携済み：{name}',
+    dingtalkBoundNoName: '連携済み',
     dingtalkBindSuccess: 'DingTalk アカウントを連携しました',
     username: 'ユーザ名',
     email: 'メールアドレス',

@@ -6845,6 +6845,8 @@ export default {
     redirectingToDingTalk: 'DingTalk로 이동 중...',
     dingtalkLoginFailed: 'DingTalk 로그인 실패',
     dingtalkBind: 'DingTalk 계정 연결',
+    dingtalkBound: '연결됨: {name}',
+    dingtalkBoundNoName: '연결됨',
     dingtalkBindSuccess: 'DingTalk 계정이 연결되었습니다',
     username: '사용자명',
     email: '이메일',

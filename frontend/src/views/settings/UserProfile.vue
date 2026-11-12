@@ -166,13 +166,19 @@
         </div>
 
         <!-- 钉钉账号绑定：仅当部署开启钉钉登录时出现。绑定在浏览器回跳后
-             由 App.vue 完成，这里只负责发起与记录返回位置。 -->
+             由 App.vue 完成，这里只负责发起与记录返回位置。已绑定时展示
+             昵称，不再重复提供绑定入口。 -->
         <div v-if="dingtalkEnabled" class="setting-row">
           <div class="setting-info">
             <label>{{ $t('auth.dingtalkBind') }}</label>
           </div>
           <div class="setting-control">
-            <t-button variant="outline" :loading="dingtalkBinding" @click="bindDingTalk">
+            <t-tag v-if="dingtalkIdentity" theme="success" variant="light">
+              {{ dingtalkIdentity.display_name
+                ? $t('auth.dingtalkBound', { name: dingtalkIdentity.display_name })
+                : $t('auth.dingtalkBoundNoName') }}
+            </t-tag>
+            <t-button v-else variant="outline" :loading="dingtalkBinding" @click="bindDingTalk">
               {{ $t('auth.dingtalkBind') }}
             </t-button>
           </div>
@@ -197,7 +203,12 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import { useI18n } from 'vue-i18n'
 import { newPasswordRules } from '@/utils/passwordPolicy'
-import { getDingTalkConfig, getDingTalkBindURL } from '@/api/auth/dingtalk'
+import {
+  getDingTalkConfig,
+  getDingTalkBindURL,
+  listMyIdentities,
+  type UserIdentitySummary,
+} from '@/api/auth/dingtalk'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -219,6 +230,7 @@ const passwordForm = reactive({
 
 const dingtalkEnabled = ref(false)
 const dingtalkBinding = ref(false)
+const dingtalkIdentity = ref<UserIdentitySummary | null>(null)
 
 const loadDingTalkAvailability = async () => {
   try {
@@ -226,6 +238,15 @@ const loadDingTalkAvailability = async () => {
     dingtalkEnabled.value = !!resp.success && !!resp.enabled
   } catch {
     dingtalkEnabled.value = false
+  }
+  if (!dingtalkEnabled.value) return
+  try {
+    const resp = await listMyIdentities()
+    const rows = resp.success ? (resp.data?.identities ?? []) : []
+    dingtalkIdentity.value = rows.find((row) => row.provider === 'dingtalk') ?? null
+  } catch {
+    // Status is optional chrome; a failed lookup just keeps the bind button.
+    dingtalkIdentity.value = null
   }
 }
 

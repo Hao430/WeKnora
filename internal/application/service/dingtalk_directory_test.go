@@ -111,6 +111,16 @@ func (f *dirFakeIdentities) Create(_ context.Context, identity *types.UserIdenti
 	return nil
 }
 
+func (f *dirFakeIdentities) ListByUserID(_ context.Context, userID string) ([]*types.UserIdentity, error) {
+	var rows []*types.UserIdentity
+	for _, identity := range f.bySubject {
+		if identity.UserID == userID {
+			rows = append(rows, identity)
+		}
+	}
+	return rows, nil
+}
+
 func (f *dirFakeIdentities) Update(_ context.Context, identity *types.UserIdentity) error {
 	if identity.ExternalID != "" {
 		f.byExternal[identity.ExternalID] = identity

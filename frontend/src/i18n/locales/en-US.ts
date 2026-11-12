@@ -3083,6 +3083,8 @@ export default {
     redirectingToDingTalk: 'Redirecting to DingTalk...',
     dingtalkLoginFailed: 'DingTalk sign-in failed',
     dingtalkBind: 'Link DingTalk account',
+    dingtalkBound: 'Bound: {name}',
+    dingtalkBoundNoName: 'Bound',
     dingtalkBindSuccess: 'DingTalk account linked',
     username: 'Username',
     email: 'Email',

@@ -179,6 +179,8 @@ func (s *dingTalkAuthService) Bind(ctx context.Context, userID string, in types.
 		Provider:       types.IdentityProviderDingTalk,
 		ProviderTenant: s.corpID,
 		Subject:        profile.UnionID,
+		ExternalID:     strings.TrimSpace(profile.UserID),
+		DisplayName:    strings.TrimSpace(profile.Nick),
 	})
 }
 
@@ -283,6 +285,8 @@ func (s *dingTalkAuthService) provision(
 		Provider:       types.IdentityProviderDingTalk,
 		ProviderTenant: s.corpID,
 		Subject:        profile.UnionID,
+		ExternalID:     strings.TrimSpace(profile.UserID),
+		DisplayName:    strings.TrimSpace(profile.Nick),
 	}
 	if err := s.identityRepo.Create(ctx, identity); err != nil {
 		if errors.Is(err, apprepo.ErrIdentityAlreadyBound) {

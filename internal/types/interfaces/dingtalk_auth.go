@@ -22,4 +22,6 @@ type DingTalkAuthService interface {
 	// binding, optionally enrolled into an existing tenant. Returns the
 	// user and whether it was already provisioned (idempotent retry).
 	AdminProvision(ctx context.Context, req *types.AdminProvisionDingTalkUserRequest) (*types.User, bool, error)
+	// ListIdentities returns the caller's bound external accounts.
+	ListIdentities(ctx context.Context, userID string) ([]types.UserIdentitySummary, error)
 }

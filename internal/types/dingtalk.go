@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 // DingTalkLoginSource identifies which DingTalk code flow produced a login.
 // The two flows return different profile fields (see dingtalk.Profile), so the
 // service and the frontend both need to know which one ran.
@@ -72,4 +74,14 @@ type DingTalkDirectorySyncResult struct {
 	// Skipped counts members without a usable phone number or with an
 	// email collision.
 	Skipped int
+}
+
+// UserIdentitySummary is the API projection of one bound external account,
+// returned by GET /auth/identities and rendered by the profile page.
+type UserIdentitySummary struct {
+	Provider string `json:"provider"`
+	// DisplayName is the provider-side nickname. Empty for bindings made
+	// before the nickname was stored.
+	DisplayName string    `json:"display_name,omitempty"`
+	BoundAt     time.Time `json:"bound_at"`
 }

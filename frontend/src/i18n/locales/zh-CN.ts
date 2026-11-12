@@ -6853,6 +6853,8 @@ export default {
     redirectingToDingTalk: '正在跳转到钉钉...',
     dingtalkLoginFailed: '钉钉登录失败',
     dingtalkBind: '绑定钉钉账号',
+    dingtalkBound: '已绑定：{name}',
+    dingtalkBoundNoName: '已绑定',
     dingtalkBindSuccess: '钉钉账号已绑定',
     username: '用户名',
     email: '邮箱',

@@ -44,3 +44,19 @@ export const dingTalkLoginURL = (): string => {
   const base = (import.meta.env.BASE_URL || '/').replace(/\/+$/, '')
   return `${base}/api/v1/auth/dingtalk/start`
 }
+
+// Bound external accounts of the caller. The profile page uses this to show
+// "already bound" instead of offering the bind button again.
+export interface UserIdentitySummary {
+  provider: string
+  display_name?: string
+  bound_at: string
+}
+
+export const listMyIdentities = async (): Promise<{
+  success: boolean
+  data?: { identities: UserIdentitySummary[] }
+}> => {
+  const response = await get('/api/v1/auth/identities')
+  return response as unknown as { success: boolean; data?: { identities: UserIdentitySummary[] } }
+}

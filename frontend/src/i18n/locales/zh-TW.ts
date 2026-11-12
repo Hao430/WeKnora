@@ -6846,6 +6846,8 @@ export default {
     redirectingToDingTalk: '正在跳轉到釘釘...',
     dingtalkLoginFailed: '釘釘登入失敗',
     dingtalkBind: '綁定釘釘帳號',
+    dingtalkBound: '已綁定：{name}',
+    dingtalkBoundNoName: '已綁定',
     dingtalkBindSuccess: '釘釘帳號已綁定',
     username: '使用者名',
     email: '電子信箱',

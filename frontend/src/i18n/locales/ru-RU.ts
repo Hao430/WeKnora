@@ -6845,6 +6845,8 @@ export default {
     redirectingToDingTalk: 'Переход в DingTalk...',
     dingtalkLoginFailed: 'Не удалось войти через DingTalk',
     dingtalkBind: 'Привязать аккаунт DingTalk',
+    dingtalkBound: 'Привязано: {name}',
+    dingtalkBoundNoName: 'Привязано',
     dingtalkBindSuccess: 'Аккаунт DingTalk привязан',
     username: 'Имя пользователя',
     email: 'Почта Email',

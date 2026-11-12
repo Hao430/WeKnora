@@ -20,6 +20,6 @@ type UserIdentityRepository interface {
 	// Create inserts one binding. A duplicate binding is reported as
 	// ErrIdentityAlreadyBound so callers can treat it as a race, not a 500.
 	Create(ctx context.Context, identity *types.UserIdentity) error
-	// Update persists mutable fields (currently external_id) of a binding.
+	// Update persists mutable fields (external_id, display_name) of a binding.
 	Update(ctx context.Context, identity *types.UserIdentity) error
 }

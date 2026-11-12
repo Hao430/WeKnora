@@ -742,6 +742,28 @@ type updateMyPreferencesRequest struct {
 // @Failure      401      {object}  errors.AppError             "未授权"
 // @Security     Bearer
 // @Router       /auth/me/preferences [put]
+// GetMyIdentities lists the caller's bound external accounts. The profile
+// page renders "bound as <nickname>" from this instead of always offering the
+// bind button. Unknown/absent providers simply produce an empty list.
+func (h *AuthHandler) GetMyIdentities(c *gin.Context) {
+	ctx := c.Request.Context()
+	user, err := h.userService.GetCurrentUser(ctx)
+	if err != nil {
+		c.Error(errors.NewUnauthorizedError("Failed to get user information").WithDetails(err.Error()))
+		return
+	}
+	identities := make([]types.UserIdentitySummary, 0, 2)
+	if h.dingTalkAuth != nil {
+		identities, err = h.dingTalkAuth.ListIdentities(ctx, user.ID)
+		if err != nil {
+			logger.Errorf(ctx, "list identities for user %s failed: %v", user.ID, err)
+			c.Error(errors.NewInternalServerError("failed to list identities"))
+			return
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"identities": identities}})
+}
+
 func (h *AuthHandler) UpdateMyPreferences(c *gin.Context) {
 	ctx := c.Request.Context()
 
