@@ -1166,16 +1166,16 @@ watch([() => route.name, () => route.params], (newvalue, oldvalue) => {
         loadCurrentKbInfo((newvalue[1] as any)?.kbId as string);
     }
 });
-let knowledgeIcon = ref('zhishiku-green.svg');
-let prefixIcon = ref('prefixIcon.svg');
+let knowledgeIcon = ref('kb-green.svg');
+let prefixIcon = ref('kb-chat.svg');
 let logoutIcon = ref('logout.svg');
 let settingIcon = ref('setting.svg');
-let feedbackIcon = ref('feedback.svg');
-let agentIcon = ref('agent.svg');
+let feedbackIcon = ref('contact.svg');
+let agentIcon = ref('agent-robot.svg');
 let artifactIcon = ref('artifact.svg');
 let toolboxIcon = ref('toolbox.svg');
 let automationIcon = ref('automation.svg');
-let organizationIcon = ref('organization.svg');
+let organizationIcon = ref('shared-space.svg');
 let pathPrefix = ref(route.name)
 const getIcon = (path: string) => {
     // 根据当前路由状态更新所有图标
@@ -1187,10 +1187,10 @@ const getIcon = (path: string) => {
     const organizationsActiveState = route.name === 'organizationList';
 
     // 知识库图标：只在知识库页面显示绿色
-    knowledgeIcon.value = kbActiveState.isKbActive ? 'zhishiku-green.svg' : 'zhishiku.svg';
+    knowledgeIcon.value = kbActiveState.isKbActive ? 'kb-green.svg' : 'kb.svg';
 
     // 智能体图标：只在智能体页面显示绿色
-    agentIcon.value = agentsActiveState ? 'agent-green.svg' : 'agent.svg';
+    agentIcon.value = agentsActiveState ? 'agent-robot-green.svg' : 'agent-robot.svg';
 
     // 产物图标：只在产物页面显示绿色
     artifactIcon.value = artifactsActiveState ? 'artifact-green.svg' : 'artifact.svg';
@@ -1199,10 +1199,10 @@ const getIcon = (path: string) => {
     automationIcon.value = route.name === 'automationList' ? 'automation-green.svg' : 'automation.svg';
 
     // 组织图标：只在组织页面显示绿色
-    organizationIcon.value = organizationsActiveState ? 'organization-green.svg' : 'organization.svg';
+    organizationIcon.value = organizationsActiveState ? 'shared-space-green.svg' : 'shared-space.svg';
 
     // 对话图标：只在对话创建页面显示绿色，其他情况显示默认
-    prefixIcon.value = creatChatActiveState.isCreatChatActive ? 'prefixIcon-green.svg' : 'prefixIcon.svg';
+    prefixIcon.value = creatChatActiveState.isCreatChatActive ? 'kb-chat-green.svg' : 'kb-chat.svg';
 
     // 设置图标：只在设置页面显示绿色
     settingIcon.value = settingsActiveState.isSettingsActive ? 'setting-green.svg' : 'setting.svg';
