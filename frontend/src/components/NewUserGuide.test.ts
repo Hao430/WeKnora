@@ -20,11 +20,14 @@ function setup(t: TestContext) {
   return { ...f, mount, router, guides, saved }
 }
 
-test('new users get the simplified tour: sidebar plus the chat composer steps', async t => {
+test('the tour never auto-opens; the manual event shows the sidebar plus chat composer steps', async t => {
   const f = setup(t)
   const { vm } = f.mount()
-  t.mock.timers.tick(700)
+  t.mock.timers.tick(2000)
   await flush()
+  assert.equal(vm.active, false, 'no auto-open on mount')
+
+  f.guides.openNewUserGuide()
   assert.equal(vm.active, true)
   assert.deepEqual(Array.from(vm.steps, (s: any) => s.key), ['overview'])
   assert.deepEqual(Array.from(vm.steps[0].targets, (t: any) => t.selector), [
@@ -38,8 +41,7 @@ test('new users get the simplified tour: sidebar plus the chat composer steps', 
 test('finishing the tour marks both done keys and the chat page tour', async t => {
   const f = setup(t)
   const { vm } = f.mount()
-  t.mock.timers.tick(700)
-  await flush()
+  f.guides.openNewUserGuide()
   vm.onFinish()
   assert.equal(f.saved.get(f.guides.GLOBAL_USER_GUIDE_KEY), '1')
   assert.equal(f.guides.isGlobalUserGuideDone(), true)
@@ -47,19 +49,10 @@ test('finishing the tour marks both done keys and the chat page tour', async t =
     'the chat contextual tour would repeat the same highlights right after')
 })
 
-test('done users are not auto-shown, but the manual event still opens', async t => {
+test('repeated open events while active are ignored', async t => {
   const f = setup(t)
-  f.saved.set(f.guides.GLOBAL_USER_GUIDE_KEY, '1')
-  const first = f.mount()
-  t.mock.timers.tick(2000)
-  await flush()
-  assert.equal(first.vm.active, false)
+  const { vm } = f.mount()
   f.guides.openNewUserGuide()
-  assert.equal(first.vm.active, true)
-  first.close()
-
-  const pending = f.mount()
-  pending.close()
-  t.mock.timers.tick(1000)
-  assert.equal(pending.vm.active, false)
+  f.guides.openNewUserGuide()
+  assert.equal(vm.active, true)
 })
