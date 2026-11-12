@@ -4758,6 +4758,7 @@ export default {
   tenant: {
     title: 'ワークスペース情報',
     currentTenant: '現在のワークスペース',
+    currentTenantWithName: '現在のワークスペース: {name}',
     switchTenant: 'ワークスペースを切り替え',
     switcher: {
       menuLabel: 'ワークスペースを切り替え',

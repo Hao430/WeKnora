@@ -5043,6 +5043,7 @@ export default {
   tenant: {
     title: '워크스페이스 정보',
     currentTenant: '현재 워크스페이스',
+    currentTenantWithName: '현재 워크스페이스: {name}',
     switchTenant: '워크스페이스 전환',
     sectionDescription: '워크스페이스의 상세 설정 정보 보기',
     statusActive: '활성',

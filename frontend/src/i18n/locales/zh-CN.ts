@@ -5052,6 +5052,7 @@ export default {
   tenant: {
     title: '空间信息',
     currentTenant: '当前空间',
+    currentTenantWithName: '当前空间：{name}',
     switchTenant: '切换空间',
     sectionDescription: '查看空间的详细配置信息',
     statusActive: '活跃',

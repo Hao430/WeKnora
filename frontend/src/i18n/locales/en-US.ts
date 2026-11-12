@@ -4758,6 +4758,7 @@ export default {
   tenant: {
     title: 'Workspace Information',
     currentTenant: 'Current Workspace',
+    currentTenantWithName: 'Current Workspace: {name}',
     switchTenant: 'Switch workspace',
     switcher: {
       menuLabel: 'Switch workspace',

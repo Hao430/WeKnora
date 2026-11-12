@@ -79,7 +79,7 @@
           <t-icon name="system-sum" class="menu-icon" aria-hidden="true" />
           <div class="dropdown-tenant-panel-main">
             <span class="dropdown-tenant-panel-name" :title="activeTenantName || userName">
-              {{ activeTenantName || userName }}
+              {{ $t('tenant.currentTenantWithName', { name: activeTenantName || userName }) }}
             </span>
             <div v-if="currentRoleLabel" class="dropdown-tenant-panel-role">
               <t-icon v-if="currentRoleIcon" :name="currentRoleIcon" size="12px"

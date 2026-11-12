@@ -5045,6 +5045,7 @@ export default {
   tenant: {
     title: '空間資訊',
     currentTenant: '當前空間',
+    currentTenantWithName: '當前空間：{name}',
     switchTenant: '切換空間',
     sectionDescription: '查看空間的詳細設定資訊',
     statusActive: '活躍',

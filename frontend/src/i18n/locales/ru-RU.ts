@@ -5043,6 +5043,7 @@ export default {
   tenant: {
     title: 'Информация о пространстве',
     currentTenant: 'Текущее пространство',
+    currentTenantWithName: 'Текущее пространство: {name}',
     switchTenant: 'Переключить рабочее пространство',
     sectionDescription: 'Просмотр детальной конфигурации пространства',
     statusActive: 'Активен',
